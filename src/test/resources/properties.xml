@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2014 Saxon State and University Library Dresden (SLUB)
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<properties>
+    <fedora>
+        <external_obj_url>http://localhost:8080/fedora/get/##PID##</external_obj_url>
+        <external_ds_url>http://localhost:8080/fedora/get/##PID##/##DS##</external_ds_url>
+        <protocol>http</protocol>
+        <host>localhost</host>
+        <port>8080</port>
+        <pid_namespace>qucosa</pid_namespace>
+    </fedora>
+    <general>
+        <repository_uri>http://localhost:8080/sword</repository_uri>
+        <temp_dir>/tmp</temp_dir>
+        <sub-service-documents>/sub_service_documents</sub-service-documents>
+        <entry-location>/entries</entry-location>
+    </general>
+    <file_handlers>
+        <handler class="org.purl.sword.server.fedora.fileHandlers.QucosaMETSFileHandler"/>
+    </file_handlers>
+    <files>
+        <mime-type>WEB-INF/mime-types.xml</mime-type>
+    </files>
+    <service_document>
+        <level>1</level>
+        <noOp>true</noOp>
+        <verbose>true</verbose>
+        <workspace title="Fedora SWORD Workspace">
+            <collection collection_pid="qucosa:open" mediation="true" mediationSet="true">
+                <deposit_url>http://localhost:8080/sword/##COLLECTION_PID##</deposit_url>
+                <users/>
+                <title>Open Collection</title>
+                <abstract>This is a collection of objects which can be freely deposited to.</abstract>
+                <policy>This collection accepts any deposit from anyone</policy>
+                <treatment>Preservation actions may occur on submitted deposits</treatment>
+                <accepts>
+                    <accept>application/vnd.qucosa.mets+xml</accept>
+                </accepts>
+                <packaging>
+                    <package>http://www.loc.gov/METS/</package>
+                </packaging>
+            </collection>
+        </workspace>
+    </service_document>
+</properties>
