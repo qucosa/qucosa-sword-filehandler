@@ -29,6 +29,7 @@ import org.purl.sword.base.ServiceDocument;
 import org.purl.sword.server.fedora.baseExtensions.DepositCollection;
 import org.purl.sword.server.fedora.fedoraObjects.Datastream;
 import org.purl.sword.server.fedora.fedoraObjects.DublinCore;
+import org.purl.sword.server.fedora.fedoraObjects.Relationship;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -68,6 +69,14 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
             log.error(e.getMessage());
         }
         return dc;
+    }
+
+    @Override
+    protected Relationship getRelationships(DepositCollection pDeposit) {
+        Relationship rels = super.getRelationships(pDeposit);
+        rels.add("isMemberOf", "info:fedora/qucosa:all");
+        rels.addModel("info:fedora/qucosa:CModel");
+        return rels;
     }
 
     @Override
