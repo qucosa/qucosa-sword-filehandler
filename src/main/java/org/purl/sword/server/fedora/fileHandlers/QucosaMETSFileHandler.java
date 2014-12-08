@@ -16,19 +16,16 @@
 
 package org.purl.sword.server.fedora.fileHandlers;
 
-import org.purl.sword.base.SWORDEntry;
-import org.purl.sword.base.SWORDException;
-import org.purl.sword.base.ServiceDocument;
-import org.purl.sword.server.fedora.baseExtensions.DepositCollection;
+import org.apache.log4j.Logger;
 
-public class QucosaMETSFileHandler extends DefaultFileHandler {
+public class QucosaMETSFileHandler extends METSFileHandler {
+
+    private static final Logger log = Logger.getLogger(METSFileHandler.class);
 
     public QucosaMETSFileHandler() {
-        super("application/vnd.qucosa.mets+xml", "");
+        super();
+        setContentType("application/vnd.qucosa.mets+xml");
+        setPackaging("");
     }
 
-    @Override
-    public SWORDEntry ingestDeposit(DepositCollection depositCollection, ServiceDocument serviceDocument) throws SWORDException {
-        return null;
-    }
 }

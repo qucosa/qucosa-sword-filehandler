@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mets:mets xmlns:mets="http://www.loc.gov/METS/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OBJID="qucosa:1"
+           xsi:schemaLocation="http://www.loc.gov/METS/ http://www.loc.gov/standards/mets/mets.xsd">
+    <mets:dmdSec ID="DMD_000">
+        <mets:mdWrap MDTYPE="MODS">
+            <mets:xmlData>
+                <mods:mods xmlns:mods="http://www.loc.gov/mods/v3"
+                           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                           version="3.5"
+                           xsi:schemaLocation="http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-5.xsd">
+                    <mods:titleInfo lang="ger" usage="primary">
+                        <mods:title>Qucosa: Quality Content of Saxony</mods:title>
+                        <mods:subTitle>Das EFRE-Projekt Sächsischer Dokumentenserver</mods:subTitle>
+                    </mods:titleInfo>
+                    <mods:abstract lang="ger" type="content">Die sächsischen Hochschulbibliotheken verfügten bisher nur
+                        über eigene, auf die jeweilige Einrichtung beschränkte Hochschulschriftenserver. Qucosa, das der
+                        kostenlosen Publikation und dauerhaften Archivierung von elektronischen Diplomarbeiten,
+                        Dissertationen und anderen Veröffentlichungen dient, eröffnet den sächsischen
+                        Hochschulbibliotheken neue Perspektiven und bildet eines der Elemente einer „Digitalen
+                        Bibliothek“ in Sachsen. Bereits mehrere sächsische Hochschulen und Forschungsinstitute benutzen
+                        Qucosa zur Publizierung der eigenen Forschungsergebnisse. Auch nichtwissenschaftliche,
+                        staatliche Einrichtungen werden zukünftig ihre Schriften auf Qucosa im Volltext anbieten.
+                    </mods:abstract>
+                    <mods:name type="personal">
+                        <mods:namePart type="given">Roland</mods:namePart>
+                        <mods:namePart type="family">Pohl</mods:namePart>
+                        <mods:role>
+                            <mods:roleTerm authority="marcrelator" authorityURI="http://id.loc.gov/vocabulary/relators"
+                                           type="code" valueURI="http://id.loc.gov/vocabulary/relators/aut">aut
+                            </mods:roleTerm>
+                        </mods:role>
+                    </mods:name>
+                    <mods:language>
+                        <mods:languageTerm authority="iso639-2b" type="code">ger</mods:languageTerm>
+                    </mods:language>
+                    <mods:originInfo eventType="publication">
+                        <mods:publisher>Saechsische Landesbibliothek- Staats- und Universitaetsbibliothek Dresden
+                        </mods:publisher>
+                        <mods:place>
+                            <mods:placeTerm type="text">Dresden</mods:placeTerm>
+                        </mods:place>
+                        <mods:dateIssued encoding="iso8601">2010-04-19</mods:dateIssued>
+                    </mods:originInfo>
+                    <mods:originInfo eventType="distribution">
+                        <mods:publisher>SLUB Dresden</mods:publisher>
+                        <mods:place>
+                            <mods:placeTerm type="text">Dresden</mods:placeTerm>
+                        </mods:place>
+                        <mods:dateIssued encoding="iso8601" keyDate="yes">2010-04-19</mods:dateIssued>
+                        <mods:edition>[Electronic ed.]</mods:edition>
+                    </mods:originInfo>
+                    <mods:classification authority="ddc">020</mods:classification>
+                    <mods:classification authority="rvk">AN 90190</mods:classification>
+                    <mods:classification lang="ger">Qucosa</mods:classification>
+                    <mods:classification lang="ger">Dokumentenserver</mods:classification>
+                    <mods:classification lang="ger">Open Access</mods:classification>
+                    <mods:physicalDescription>
+                        <mods:digitalOrigin>born digital</mods:digitalOrigin>
+                    </mods:physicalDescription>
+                    <mods:typeOfResource>text</mods:typeOfResource>
+                    <mods:accessCondition>Dieser Beitrag ist mit Zustimmung des Rechteinhabers frei zugänglich.
+                    </mods:accessCondition>
+                    <mods:identifier type="urn">urn:nbn:de:bsz:14-qucosa-32992</mods:identifier>
+                    <mods:identifier type="swb-ppn">322202922</mods:identifier>
+                    <mods:relatedItem type="series">
+                        <mods:titleInfo>
+                            <mods:title>BIS - Das Magazin der Bibliotheken in Sachsen</mods:title>
+                            <mods:partNumber>3(2010)1, S. 26 - 27</mods:partNumber>
+                        </mods:titleInfo>
+                    </mods:relatedItem>
+                </mods:mods>
+            </mets:xmlData>
+        </mets:mdWrap>
+    </mets:dmdSec>
+    <mets:amdSec ID="AMD_000">
+        <mets:rightsMD ID="RIGHTS_000">
+            <mets:mdWrap MDTYPE="OTHER" OTHERMDTYPE="SLUBRIGHTS" MIMETYPE="application/vnd.slub-info+xml">
+                <mets:xmlData>
+                    <slub:info xmlns:slub="http://slub-dresden.de/">
+                        <slub:submitter>
+                            <slub:name>Frau Administrator</slub:name>
+                            <slub:contact>mailto:qucosa.admin@slub-dresden.de</slub:contact>
+                        </slub:submitter>
+                        <slub:project>OpenAire Project Name</slub:project>
+                        <slub:client>Mandant</slub:client>
+                        <slub:rights>
+                            <slub:license valueURI="URI der Lizenz">Lizenzangabe</slub:license>
+                            <slub:embargo encoding="iso8601">2014-11-26</slub:embargo>
+                            <slub:accessDNB>true</slub:accessDNB>
+                            <slub:accessPOD>true</slub:accessPOD>
+                        </slub:rights>
+                    </slub:info>
+                </mets:xmlData>
+            </mets:mdWrap>
+        </mets:rightsMD>
+    </mets:amdSec>
+    <mets:fileSec>
+        <mets:fileGrp USE="ORIGINAL">
+            <mets:file ID="ATT-1" MIMETYPE="application/pdf">
+                <mets:FLocat xmlns:xlin="http://www.w3.org/1999/xlink"
+                             LOCTYPE="URL"
+                             xlin:href="http://localhost:8080/fedora/objects/qucosa:1/datastreams/ATT-1/content"/>
+            </mets:file>
+        </mets:fileGrp>
+    </mets:fileSec>
+    <mets:structMap>
+        <mets:div DMDID="DMD_000" TYPE="article">
+            <mets:fptr FILEID="ATT-1"/>
+        </mets:div>
+    </mets:structMap>
+</mets:mets>
