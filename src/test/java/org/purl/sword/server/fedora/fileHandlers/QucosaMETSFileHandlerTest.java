@@ -16,6 +16,7 @@
 
 package org.purl.sword.server.fedora.fileHandlers;
 
+import org.jdom.JDOMException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,8 +35,8 @@ import org.purl.sword.server.fedora.utils.XMLProperties;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.*;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({StartupListener.class, DefaultFileHandler.class})
@@ -45,6 +46,9 @@ public class QucosaMETSFileHandlerTest {
     public static final String COLLECTION = "collection:open";
     public static final String USERNAME = "fedoraAdmin";
     public static final String SUBMITTER = "qucosa";
+    public static final String METS_FILE = "/mets_001.xml";
+
+    private FedoraObject mockFedoraObject;
 
     @Before
     public void ensureLocalProperties() {
@@ -55,25 +59,27 @@ public class QucosaMETSFileHandlerTest {
 
     @Before
     public void setupFedoraObjectMock() throws Exception {
-        FedoraObject mockFedoraObject = mock(FedoraObject.class);
+        mockFedoraObject = mock(FedoraObject.class);
         PowerMockito.whenNew(FedoraObject.class)
                 .withAnyArguments()
                 .thenReturn(mockFedoraObject);
-        when(mockFedoraObject.getDC()).thenReturn(new DublinCore());
     }
 
     @Test
-    public void handlesQucosaMETS() {
+    public void handlesQucosaMETS() throws JDOMException {
         FileHandler fh = new QucosaMETSFileHandler();
         assertTrue(fh.isHandled(MEDIA_TYPE, ""));
     }
 
     @Test
-    public void swordContentElementPropertiesMatch() throws SWORDException {
+    public void swordContentElementPropertiesMatch() throws SWORDException, JDOMException {
+        when(mockFedoraObject.getDC()).thenReturn(new DublinCore());
         FileHandler fh = new QucosaMETSFileHandler();
+
         SWORDEntry result = fh.ingestDeposit(
                 buildDeposit(),
                 buildServiceDocument());
+
         assertTrue("Should have no-op set", result.isNoOp());
         assertTrue("Should point to collection", result.getLinks().next().getHref().contains(COLLECTION));
         assertEquals("Should have author name", USERNAME, result.getAuthors().next().getName());
@@ -81,12 +87,37 @@ public class QucosaMETSFileHandlerTest {
         assertEquals("Should have submitter", SUBMITTER, result.getContributors().next().getName());
     }
 
+    @Test
+    public void dcDatastreamHasTitle() throws SWORDException, JDOMException {
+        FileHandler fh = new QucosaMETSFileHandler();
+        doCallRealMethod().when(mockFedoraObject).setDC(any(DublinCore.class));
+        when(mockFedoraObject.getDC()).thenCallRealMethod();
+
+        fh.ingestDeposit(buildDeposit(), buildServiceDocument());
+
+        DublinCore result = mockFedoraObject.getDC();
+        assertTrue("Should have title", result.getTitle().contains("Qucosa: Quality Content of Saxony"));
+    }
+
+    @Test
+    public void dcDatastreamHasIdentifiers() throws SWORDException, JDOMException {
+        FileHandler fh = new QucosaMETSFileHandler();
+        doCallRealMethod().when(mockFedoraObject).setDC(any(DublinCore.class));
+        when(mockFedoraObject.getDC()).thenCallRealMethod();
+
+        fh.ingestDeposit(buildDeposit(), buildServiceDocument());
+
+        DublinCore result = mockFedoraObject.getDC();
+        assertTrue("Should have identifier", result.getIdentifier().contains("urn:nbn:de:bsz:14-qucosa-32992"));
+        assertTrue("Should have identifier", result.getIdentifier().contains("322202922"));
+    }
+
     private DepositCollection buildDeposit() {
         Deposit dp = new Deposit();
         dp.setContentType(MEDIA_TYPE);
         dp.setUsername(USERNAME);
         dp.setOnBehalfOf(SUBMITTER);
-        dp.setFile(System.class.getResourceAsStream("/mets_001.xml"));
+        dp.setFile(System.class.getResourceAsStream(METS_FILE));
         dp.setNoOp(true);
         return new DepositCollection(dp, COLLECTION);
     }
