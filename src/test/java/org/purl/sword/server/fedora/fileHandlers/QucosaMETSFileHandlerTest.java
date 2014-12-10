@@ -16,7 +16,6 @@
 
 package org.purl.sword.server.fedora.fileHandlers;
 
-import org.jdom.JDOMException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -26,7 +25,6 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.purl.sword.base.Deposit;
 import org.purl.sword.base.SWORDEntry;
-import org.purl.sword.base.SWORDException;
 import org.purl.sword.base.ServiceDocument;
 import org.purl.sword.server.fedora.baseExtensions.DepositCollection;
 import org.purl.sword.server.fedora.fedoraObjects.Datastream;
@@ -70,13 +68,13 @@ public class QucosaMETSFileHandlerTest {
     }
 
     @Test
-    public void handlesQucosaMETS() throws JDOMException {
+    public void handlesQucosaMETS() throws Exception {
         FileHandler fh = new QucosaMETSFileHandler();
         assertTrue(fh.isHandled(MEDIA_TYPE, ""));
     }
 
     @Test
-    public void swordContentElementPropertiesMatch() throws SWORDException, JDOMException {
+    public void swordContentElementPropertiesMatch() throws Exception {
         when(mockFedoraObject.getDC()).thenReturn(new DublinCore());
         FileHandler fh = new QucosaMETSFileHandler();
 
@@ -92,7 +90,7 @@ public class QucosaMETSFileHandlerTest {
     }
 
     @Test
-    public void dcDatastreamHasTitle() throws SWORDException, JDOMException {
+    public void dcDatastreamHasTitle() throws Exception {
         FileHandler fh = new QucosaMETSFileHandler();
         doCallRealMethod().when(mockFedoraObject).setDC(any(DublinCore.class));
         when(mockFedoraObject.getDC()).thenCallRealMethod();
@@ -104,7 +102,7 @@ public class QucosaMETSFileHandlerTest {
     }
 
     @Test
-    public void dcDatastreamHasIdentifiers() throws SWORDException, JDOMException {
+    public void dcDatastreamHasIdentifiers() throws Exception {
         FileHandler fh = new QucosaMETSFileHandler();
         doCallRealMethod().when(mockFedoraObject).setDC(any(DublinCore.class));
         when(mockFedoraObject.getDC()).thenCallRealMethod();
@@ -117,7 +115,7 @@ public class QucosaMETSFileHandlerTest {
     }
 
     @Test
-    public void hasProperSlubInfoDatastream() throws SWORDException, JDOMException {
+    public void hasProperSlubInfoDatastream() throws Exception {
         FileHandler fh = new QucosaMETSFileHandler();
         when(mockFedoraObject.getDC()).thenReturn(new DublinCore());
         doCallRealMethod().when(mockFedoraObject).setDatastreams(Matchers.<List<Datastream>>any());
@@ -130,6 +128,24 @@ public class QucosaMETSFileHandlerTest {
         assertEquals("Should have SLUB mimetype", "application/vnd.slub-info+xml", ds.getMimeType());
         assertEquals("Should be active", State.ACTIVE, ds.getState());
         assertEquals("Should be versionable", true, ds.isVersionable());
+        assertEquals("Should have proper label", QucosaMETSFileHandler.DS_ID_SLUBINFO_LABEL, ds.getLabel());
+    }
+
+    @Test
+    public void hasProperModsDatastream() throws Exception {
+        FileHandler fh = new QucosaMETSFileHandler();
+        when(mockFedoraObject.getDC()).thenReturn(new DublinCore());
+        doCallRealMethod().when(mockFedoraObject).setDatastreams(Matchers.<List<Datastream>>any());
+        doCallRealMethod().when(mockFedoraObject).getDatastreams();
+
+        fh.ingestDeposit(buildDeposit(), buildServiceDocument());
+
+        Datastream ds = getDatastream(QucosaMETSFileHandler.DS_ID_MODS, mockFedoraObject);
+        assertNotNull("Should have datastream", ds);
+        assertEquals("Should have MODS mimetype", "application/mods+xml", ds.getMimeType());
+        assertEquals("Should be active", State.ACTIVE, ds.getState());
+        assertEquals("Should be versionable", true, ds.isVersionable());
+        assertEquals("Should have proper label", QucosaMETSFileHandler.DS_ID_MODS_LABEL, ds.getLabel());
     }
 
     private DepositCollection buildDeposit() {
@@ -142,7 +158,7 @@ public class QucosaMETSFileHandlerTest {
         return new DepositCollection(dp, COLLECTION);
     }
 
-    private ServiceDocument buildServiceDocument() throws SWORDException {
+    private ServiceDocument buildServiceDocument() throws Exception {
         return new XMLProperties().getServiceDocument("someUser");
     }
 

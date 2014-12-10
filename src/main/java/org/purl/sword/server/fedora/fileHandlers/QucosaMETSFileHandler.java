@@ -46,6 +46,9 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
     public static final Namespace XLINK = Namespace.getNamespace("xlink", "http://www.w3.org/1999/xlink");
     public static final Namespace SLUB = Namespace.getNamespace("slub", "http://slub-dresden.de");
     public static final String DS_ID_SLUBINFO = "SLUB-INFO";
+    public static final String DS_ID_SLUBINFO_LABEL = "Object Bibliographic Metadata";
+    public static final String DS_ID_MODS = "MODS";
+    public static final String DS_ID_MODS_LABEL = "MODS";
     private static final Logger log = Logger.getLogger(METSFileHandler.class);
     private final Map<String, XPathQuery> queries;
     private Document metsDocument;
@@ -85,6 +88,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
     protected List<Datastream> getDatastreams(DepositCollection pDeposit) throws IOException, SWORDException {
         LinkedList<Datastream> resultList = new LinkedList<>();
         addIfNotNull(resultList, getSlubInfoDatastream());
+        addIfNotNull(resultList, getModsDatastream());
         return resultList;
     }
 
@@ -96,6 +100,22 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         if (es != null) list.addAll(es);
     }
 
+    private Datastream getModsDatastream() {
+        Datastream result = null;
+        try {
+            Element el = queries.get("mods").selectNode(metsDocument);
+            if (el != null) {
+                Document d = new Document((Element) el.clone());
+                result = new XMLInlineDatastream(DS_ID_MODS, d);
+                result.setLabel(DS_ID_MODS_LABEL);
+                result.setMimeType("application/mods+xml");
+            }
+        } catch (JDOMException e) {
+            log.error(e);
+        }
+        return result;
+    }
+
     private Datastream getSlubInfoDatastream() {
         Datastream result = null;
         try {
@@ -104,6 +124,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
                 Element content = (Element) el.getChild("xmlData", METS).getChildren().get(0);
                 Document d = new Document((Element) content.clone());
                 result = new XMLInlineDatastream(DS_ID_SLUBINFO, d);
+                result.setLabel(DS_ID_SLUBINFO_LABEL);
                 result.setMimeType(el.getAttribute("MIMETYPE").getValue());
             }
         } catch (JDOMException e) {
@@ -118,6 +139,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         return new HashMap<String, XPathQuery>() {{
             put("primary_title", new XPathQuery(MODS_PREFIX + "/mods:titleInfo[@usage='primary']/mods:title"));
             put("identifiers", new XPathQuery(MODS_PREFIX + "/mods:identifier"));
+            put("mods", new XPathQuery(MODS_PREFIX));
             put("slubrights_mdwrap", new XPathQuery(METS_AMDSEC_PREFIX + "/mets:mdWrap[@MDTYPE='OTHER' and @OTHERMDTYPE='SLUBRIGHTS']"));
         }};
     }
