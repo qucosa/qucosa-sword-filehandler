@@ -25,6 +25,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.purl.sword.base.Deposit;
 import org.purl.sword.base.SWORDEntry;
+import org.purl.sword.base.SWORDException;
 import org.purl.sword.base.ServiceDocument;
 import org.purl.sword.server.fedora.baseExtensions.DepositCollection;
 import org.purl.sword.server.fedora.fedoraObjects.Datastream;
@@ -48,7 +49,8 @@ public class QucosaMETSFileHandlerTest {
     public static final String COLLECTION = "collection:open";
     public static final String USERNAME = "fedoraAdmin";
     public static final String SUBMITTER = "qucosa";
-    public static final String METS_FILE = "/mets_001.xml";
+    public static final String METS_FILE_OK = "/mets_001.xml";
+    public static final String METS_FILE_BAD = "/mets_002.xml";
 
     private FedoraObject mockFedoraObject;
 
@@ -79,7 +81,7 @@ public class QucosaMETSFileHandlerTest {
         FileHandler fh = new QucosaMETSFileHandler();
 
         SWORDEntry result = fh.ingestDeposit(
-                buildDeposit(),
+                buildDeposit(METS_FILE_OK),
                 buildServiceDocument());
 
         assertTrue("Should have no-op set", result.isNoOp());
@@ -95,7 +97,7 @@ public class QucosaMETSFileHandlerTest {
         doCallRealMethod().when(mockFedoraObject).setDC(any(DublinCore.class));
         when(mockFedoraObject.getDC()).thenCallRealMethod();
 
-        fh.ingestDeposit(buildDeposit(), buildServiceDocument());
+        fh.ingestDeposit(buildDeposit(METS_FILE_OK), buildServiceDocument());
 
         DublinCore result = mockFedoraObject.getDC();
         assertTrue("Should have title", result.getTitle().contains("Qucosa: Quality Content of Saxony"));
@@ -107,7 +109,7 @@ public class QucosaMETSFileHandlerTest {
         doCallRealMethod().when(mockFedoraObject).setDC(any(DublinCore.class));
         when(mockFedoraObject.getDC()).thenCallRealMethod();
 
-        fh.ingestDeposit(buildDeposit(), buildServiceDocument());
+        fh.ingestDeposit(buildDeposit(METS_FILE_OK), buildServiceDocument());
 
         DublinCore result = mockFedoraObject.getDC();
         assertTrue("Should have identifier", result.getIdentifier().contains("urn:nbn:de:bsz:14-qucosa-32992"));
@@ -121,7 +123,7 @@ public class QucosaMETSFileHandlerTest {
         doCallRealMethod().when(mockFedoraObject).setDatastreams(Matchers.<List<Datastream>>any());
         doCallRealMethod().when(mockFedoraObject).getDatastreams();
 
-        fh.ingestDeposit(buildDeposit(), buildServiceDocument());
+        fh.ingestDeposit(buildDeposit(METS_FILE_OK), buildServiceDocument());
 
         Datastream ds = getDatastream(QucosaMETSFileHandler.DS_ID_SLUBINFO, mockFedoraObject);
         assertNotNull("Should have datastream", ds);
@@ -138,7 +140,7 @@ public class QucosaMETSFileHandlerTest {
         doCallRealMethod().when(mockFedoraObject).setDatastreams(Matchers.<List<Datastream>>any());
         doCallRealMethod().when(mockFedoraObject).getDatastreams();
 
-        fh.ingestDeposit(buildDeposit(), buildServiceDocument());
+        fh.ingestDeposit(buildDeposit(METS_FILE_OK), buildServiceDocument());
 
         Datastream ds = getDatastream(QucosaMETSFileHandler.DS_ID_MODS, mockFedoraObject);
         assertNotNull("Should have datastream", ds);
@@ -148,12 +150,20 @@ public class QucosaMETSFileHandlerTest {
         assertEquals("Should have proper label", QucosaMETSFileHandler.DS_ID_MODS_LABEL, ds.getLabel());
     }
 
-    private DepositCollection buildDeposit() {
+    @Test(expected = SWORDException.class)
+    public void exceptionOnMissingMODS() throws Exception {
+        FileHandler fh = new QucosaMETSFileHandler();
+        when(mockFedoraObject.getDC()).thenReturn(new DublinCore());
+
+        fh.ingestDeposit(buildDeposit(METS_FILE_BAD), buildServiceDocument());
+    }
+
+    private DepositCollection buildDeposit(String metsFile) {
         Deposit dp = new Deposit();
         dp.setContentType(MEDIA_TYPE);
         dp.setUsername(USERNAME);
         dp.setOnBehalfOf(SUBMITTER);
-        dp.setFile(System.class.getResourceAsStream(METS_FILE));
+        dp.setFile(System.class.getResourceAsStream(metsFile));
         dp.setNoOp(true);
         return new DepositCollection(dp, COLLECTION);
     }

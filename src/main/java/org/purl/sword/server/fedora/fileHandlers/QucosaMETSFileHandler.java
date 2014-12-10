@@ -100,7 +100,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         if (es != null) list.addAll(es);
     }
 
-    private Datastream getModsDatastream() {
+    private Datastream getModsDatastream() throws SWORDException {
         Datastream result = null;
         try {
             Element el = queries.get("mods").selectNode(metsDocument);
@@ -109,6 +109,8 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
                 result = new XMLInlineDatastream(DS_ID_MODS, d);
                 result.setLabel(DS_ID_MODS_LABEL);
                 result.setMimeType("application/mods+xml");
+            } else {
+                throw new SWORDException("Missing MODS datastream in METS source");
             }
         } catch (JDOMException e) {
             log.error(e);
