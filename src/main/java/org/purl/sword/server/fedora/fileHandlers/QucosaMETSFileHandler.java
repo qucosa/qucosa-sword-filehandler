@@ -30,6 +30,7 @@ import org.purl.sword.server.fedora.baseExtensions.DepositCollection;
 import org.purl.sword.server.fedora.fedoraObjects.Datastream;
 import org.purl.sword.server.fedora.fedoraObjects.DublinCore;
 import org.purl.sword.server.fedora.fedoraObjects.Relationship;
+import org.purl.sword.server.fedora.fedoraObjects.XMLInlineDatastream;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,7 +44,8 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
     public static final Namespace METS = Namespace.getNamespace("mets", "http://www.loc.gov/METS/");
     public static final Namespace MODS = Namespace.getNamespace("mods", "http://www.loc.gov/mods/v3");
     public static final Namespace XLINK = Namespace.getNamespace("xlink", "http://www.w3.org/1999/xlink");
-    public static final String MODS_XPATH_PREFIX = "/mets:mets/mets:dmdSec/mets:mdWrap[@MDTYPE='MODS']/mets:xmlData/mods:mods";
+    public static final Namespace SLUB = Namespace.getNamespace("slub", "http://slub-dresden.de");
+    public static final String DS_ID_SLUBINFO = "SLUB-INFO";
     private static final Logger log = Logger.getLogger(METSFileHandler.class);
     private final Map<String, XPath> queries;
     private Document metsDocument;
@@ -63,7 +65,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
     protected DublinCore getDublinCore(DepositCollection pDeposit) {
         DublinCore dc = new DublinCore();
         try {
-            subjoinOne(dc.getTitle(), metsDocument, "primary_title");
+            subjoin(dc.getTitle(), metsDocument, "primary_title");
             subjoinAll(dc.getIdentifier(), metsDocument, "identifiers");
         } catch (JDOMException e) {
             log.error(e.getMessage());
@@ -81,7 +83,13 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
 
     @Override
     protected List<Datastream> getDatastreams(DepositCollection pDeposit) throws IOException, SWORDException {
-        return new LinkedList<>();
+        LinkedList<Datastream> resultList = new LinkedList<>();
+        addIfNotNull(resultList, getSlubInfoDatastream());
+        return resultList;
+    }
+
+    private <E> void addIfNotNull(List<E> list, E e) {
+        if (e != null) list.add(e);
     }
 
     private XPath buildQuery(String xpath) throws JDOMException {
@@ -89,13 +97,33 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         xp.addNamespace(METS);
         xp.addNamespace(MODS);
         xp.addNamespace(XLINK);
+        xp.addNamespace(SLUB);
         return xp;
     }
 
+    private Datastream getSlubInfoDatastream() {
+        Datastream result = null;
+        try {
+            Element el = (Element) queries.get("slubrights_mdwrap").selectSingleNode(metsDocument);
+            if (el != null) {
+                Element content = (Element) el.getChild("xmlData", METS).getChildren().get(0);
+                Document d = new Document((Element) content.clone());
+                result = new XMLInlineDatastream(DS_ID_SLUBINFO, d);
+                result.setMimeType(el.getAttribute("MIMETYPE").getValue());
+            }
+        } catch (JDOMException e) {
+            log.error(e);
+        }
+        return result;
+    }
+
     private Map<String, XPath> initializeXPathQueries() throws JDOMException {
+        final String MODS_PREFIX = "/mets:mets/mets:dmdSec/mets:mdWrap[@MDTYPE='MODS']/mets:xmlData/mods:mods";
+        final String METS_AMDSEC_PREFIX = "/mets:mets/mets:amdSec/mets:rightsMD";
         return new HashMap<String, XPath>() {{
-            put("primary_title", buildQuery(MODS_XPATH_PREFIX + "/mods:titleInfo[@usage='primary']/mods:title"));
-            put("identifiers", buildQuery(MODS_XPATH_PREFIX + "/mods:identifier"));
+            put("primary_title", buildQuery(MODS_PREFIX + "/mods:titleInfo[@usage='primary']/mods:title"));
+            put("identifiers", buildQuery(MODS_PREFIX + "/mods:identifier"));
+            put("slubrights_mdwrap", buildQuery(METS_AMDSEC_PREFIX + "/mets:mdWrap[@MDTYPE='OTHER' and @OTHERMDTYPE='SLUBRIGHTS']"));
         }};
     }
 
@@ -114,15 +142,15 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         }
     }
 
+    private void subjoin(List<String> strings, Document metsDocument, String key) throws JDOMException {
+        Element el = (Element) queries.get(key).selectSingleNode(metsDocument);
+        if (el != null) strings.add(el.getTextTrim());
+    }
+
     private void subjoinAll(List<String> strings, Document metsDocument, String key) throws JDOMException {
         for (Object o : queries.get(key).selectNodes(metsDocument)) {
             Element el = (Element) o;
             strings.add(el.getTextTrim());
         }
-    }
-
-    private void subjoinOne(List<String> strings, Document metsDocument, String key) throws JDOMException {
-        Element el = (Element) queries.get(key).selectSingleNode(metsDocument);
-        if (el != null) strings.add(el.getTextTrim());
     }
 }

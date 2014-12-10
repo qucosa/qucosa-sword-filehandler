@@ -20,6 +20,7 @@ import org.jdom.JDOMException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Matchers;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -28,13 +29,16 @@ import org.purl.sword.base.SWORDEntry;
 import org.purl.sword.base.SWORDException;
 import org.purl.sword.base.ServiceDocument;
 import org.purl.sword.server.fedora.baseExtensions.DepositCollection;
+import org.purl.sword.server.fedora.fedoraObjects.Datastream;
 import org.purl.sword.server.fedora.fedoraObjects.DublinCore;
 import org.purl.sword.server.fedora.fedoraObjects.FedoraObject;
+import org.purl.sword.server.fedora.fedoraObjects.State;
 import org.purl.sword.server.fedora.utils.StartupListener;
 import org.purl.sword.server.fedora.utils.XMLProperties;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import java.util.List;
+
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
@@ -112,6 +116,22 @@ public class QucosaMETSFileHandlerTest {
         assertTrue("Should have identifier", result.getIdentifier().contains("322202922"));
     }
 
+    @Test
+    public void hasProperSlubInfoDatastream() throws SWORDException, JDOMException {
+        FileHandler fh = new QucosaMETSFileHandler();
+        when(mockFedoraObject.getDC()).thenReturn(new DublinCore());
+        doCallRealMethod().when(mockFedoraObject).setDatastreams(Matchers.<List<Datastream>>any());
+        doCallRealMethod().when(mockFedoraObject).getDatastreams();
+
+        fh.ingestDeposit(buildDeposit(), buildServiceDocument());
+
+        Datastream ds = getDatastream(QucosaMETSFileHandler.DS_ID_SLUBINFO, mockFedoraObject);
+        assertNotNull("Should have datastream", ds);
+        assertEquals("Should have SLUB mimetype", "application/vnd.slub-info+xml", ds.getMimeType());
+        assertEquals("Should be active", State.ACTIVE, ds.getState());
+        assertEquals("Should be versionable", true, ds.isVersionable());
+    }
+
     private DepositCollection buildDeposit() {
         Deposit dp = new Deposit();
         dp.setContentType(MEDIA_TYPE);
@@ -124,6 +144,13 @@ public class QucosaMETSFileHandlerTest {
 
     private ServiceDocument buildServiceDocument() throws SWORDException {
         return new XMLProperties().getServiceDocument("someUser");
+    }
+
+    private Datastream getDatastream(String dsID, FedoraObject fedoraObject) {
+        for (Datastream ds : fedoraObject.getDatastreams()) {
+            if (ds.getId().equals(dsID)) return ds;
+        }
+        return null;
     }
 
 }
