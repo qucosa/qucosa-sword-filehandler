@@ -27,10 +27,7 @@ import org.purl.sword.base.SWORDEntry;
 import org.purl.sword.base.SWORDException;
 import org.purl.sword.base.ServiceDocument;
 import org.purl.sword.server.fedora.baseExtensions.DepositCollection;
-import org.purl.sword.server.fedora.fedoraObjects.Datastream;
-import org.purl.sword.server.fedora.fedoraObjects.DublinCore;
-import org.purl.sword.server.fedora.fedoraObjects.Relationship;
-import org.purl.sword.server.fedora.fedoraObjects.XMLInlineDatastream;
+import org.purl.sword.server.fedora.fedoraObjects.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -89,6 +86,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         LinkedList<Datastream> resultList = new LinkedList<>();
         addIfNotNull(resultList, getSlubInfoDatastream());
         addIfNotNull(resultList, getModsDatastream());
+        addIfNotNull(resultList, getFileDatastreams());
         return resultList;
     }
 
@@ -100,8 +98,27 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         if (es != null) list.addAll(es);
     }
 
+    private List<Datastream> getFileDatastreams() throws SWORDException {
+        List<Datastream> datastreamList = new LinkedList<>();
+        try {
+            for (Element e : queries.get("files").selectNodes(metsDocument)) {
+                final String id = validateAndSet("file ID", e.getAttributeValue("ID"));
+                final String mimetype = validateAndSet("mime type", e.getAttributeValue("MIMETYPE"));
+                final Element fLocat = validateAndSet("FLocat element", e.getChild("FLocat", METS));
+                final String href = validateAndSet("file content URL", fLocat.getAttributeValue("href", XLINK));
+                Datastream ds = new LocalDatastream(id, mimetype, href);
+                ds.setLabel(fLocat.getAttributeValue("title", XLINK));
+                datastreamList.add(ds);
+            }
+        } catch (JDOMException e) {
+            log.error(e);
+            throw new SWORDException("Cannot obtain file datastreams", e);
+        }
+        return datastreamList;
+    }
+
     private Datastream getModsDatastream() throws SWORDException {
-        Datastream result = null;
+        Datastream result;
         try {
             Element el = queries.get("mods").selectNode(metsDocument);
             if (el != null) {
@@ -114,6 +131,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
             }
         } catch (JDOMException e) {
             log.error(e);
+            throw new SWORDException("Cannot obtain MODS datastream", e);
         }
         return result;
     }
@@ -139,9 +157,10 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         final String MODS_PREFIX = "/mets:mets/mets:dmdSec/mets:mdWrap[@MDTYPE='MODS']/mets:xmlData/mods:mods";
         final String METS_AMDSEC_PREFIX = "/mets:mets/mets:amdSec/mets:rightsMD";
         return new HashMap<String, XPathQuery>() {{
-            put("primary_title", new XPathQuery(MODS_PREFIX + "/mods:titleInfo[@usage='primary']/mods:title"));
+            put("files", new XPathQuery("/mets:mets/mets:fileSec/mets:fileGrp[@USE='ORIGINAL']/mets:file"));
             put("identifiers", new XPathQuery(MODS_PREFIX + "/mods:identifier"));
             put("mods", new XPathQuery(MODS_PREFIX));
+            put("primary_title", new XPathQuery(MODS_PREFIX + "/mods:titleInfo[@usage='primary']/mods:title"));
             put("slubrights_mdwrap", new XPathQuery(METS_AMDSEC_PREFIX + "/mets:mdWrap[@MDTYPE='OTHER' and @OTHERMDTYPE='SLUBRIGHTS']"));
         }};
     }
@@ -158,6 +177,14 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
             String message = "Couldn't retrieve METS from deposit: " + e.toString();
             log.error(message);
             throw new SWORDException(message, e);
+        }
+    }
+
+    private <E> E validateAndSet(String description, E value) throws SWORDException {
+        if (value != null) {
+            return value;
+        } else {
+            throw new SWORDException("Cannot obtain " + description);
         }
     }
 

@@ -51,6 +51,7 @@ public class QucosaMETSFileHandlerTest {
     public static final String SUBMITTER = "qucosa";
     public static final String METS_FILE_OK = "/mets_001.xml";
     public static final String METS_FILE_BAD = "/mets_002.xml";
+    public static final String METS_FILE_BAD2 = "/mets_003.xml";
 
     private FedoraObject mockFedoraObject;
 
@@ -150,12 +151,37 @@ public class QucosaMETSFileHandlerTest {
         assertEquals("Should have proper label", QucosaMETSFileHandler.DS_ID_MODS_LABEL, ds.getLabel());
     }
 
+    @Test
+    public void hasProperFileDatastream() throws Exception {
+        FileHandler fh = new QucosaMETSFileHandler();
+        when(mockFedoraObject.getDC()).thenReturn(new DublinCore());
+        doCallRealMethod().when(mockFedoraObject).setDatastreams(Matchers.<List<Datastream>>any());
+        doCallRealMethod().when(mockFedoraObject).getDatastreams();
+
+        fh.ingestDeposit(buildDeposit(METS_FILE_OK), buildServiceDocument());
+
+        Datastream ds = getDatastream("ATT-1", mockFedoraObject);
+        assertNotNull("Should have datastream", ds);
+        assertEquals("Should have PDF mimetype", "application/pdf", ds.getMimeType());
+        assertEquals("Should be active", State.ACTIVE, ds.getState());
+        assertEquals("Should be versionable", true, ds.isVersionable());
+        assertEquals("Should have proper label", "Attachment", ds.getLabel());
+    }
+
     @Test(expected = SWORDException.class)
     public void exceptionOnMissingMODS() throws Exception {
         FileHandler fh = new QucosaMETSFileHandler();
         when(mockFedoraObject.getDC()).thenReturn(new DublinCore());
 
         fh.ingestDeposit(buildDeposit(METS_FILE_BAD), buildServiceDocument());
+    }
+
+    @Test(expected = SWORDException.class)
+    public void exceptionOnInvalidFileLink() throws Exception {
+        FileHandler fh = new QucosaMETSFileHandler();
+        when(mockFedoraObject.getDC()).thenReturn(new DublinCore());
+
+        fh.ingestDeposit(buildDeposit(METS_FILE_BAD2), buildServiceDocument());
     }
 
     private DepositCollection buildDeposit(String metsFile) {
