@@ -43,9 +43,9 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
     public static final Namespace XLINK = Namespace.getNamespace("xlink", "http://www.w3.org/1999/xlink");
     public static final Namespace SLUB = Namespace.getNamespace("slub", "http://slub-dresden.de");
     public static final String DS_ID_SLUBINFO = "SLUB-INFO";
-    public static final String DS_ID_SLUBINFO_LABEL = "Object Bibliographic Metadata";
+    public static final String DS_ID_SLUBINFO_LABEL = "SLUB Administrative Metadata";
     public static final String DS_ID_MODS = "MODS";
-    public static final String DS_ID_MODS_LABEL = "MODS";
+    public static final String DS_ID_MODS_LABEL = "Object Bibliographic Metadata";
     private static final Logger log = Logger.getLogger(METSFileHandler.class);
     private final Map<String, XPathQuery> queries;
     private Document metsDocument;
