@@ -16,6 +16,13 @@
 
 package org.purl.sword.server.fedora.fileHandlers;
 
+import org.apache.commons.io.IOUtils;
+import org.jdom.Document;
+import org.jdom.Element;
+import org.jdom.Namespace;
+import org.jdom.input.SAXBuilder;
+import org.jdom.output.XMLOutputter;
+import org.jdom.xpath.XPath;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,14 +35,14 @@ import org.purl.sword.base.SWORDEntry;
 import org.purl.sword.base.SWORDException;
 import org.purl.sword.base.ServiceDocument;
 import org.purl.sword.server.fedora.baseExtensions.DepositCollection;
-import org.purl.sword.server.fedora.fedoraObjects.Datastream;
-import org.purl.sword.server.fedora.fedoraObjects.DublinCore;
-import org.purl.sword.server.fedora.fedoraObjects.FedoraObject;
-import org.purl.sword.server.fedora.fedoraObjects.State;
+import org.purl.sword.server.fedora.fedoraObjects.*;
 import org.purl.sword.server.fedora.utils.StartupListener;
 import org.purl.sword.server.fedora.utils.XMLProperties;
 
+import java.io.File;
+import java.io.InputStream;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
@@ -126,12 +133,12 @@ public class QucosaMETSFileHandlerTest {
 
         fh.ingestDeposit(buildDeposit(METS_FILE_OK), buildServiceDocument());
 
-        Datastream ds = getDatastream(QucosaMETSFileHandler.DS_ID_SLUBINFO, mockFedoraObject);
+        Datastream ds = getDatastream("SLUB-INFO", mockFedoraObject);
         assertNotNull("Should have datastream", ds);
         assertEquals("Should have SLUB mimetype", "application/vnd.slub-info+xml", ds.getMimeType());
         assertEquals("Should be active", State.ACTIVE, ds.getState());
         assertEquals("Should be versionable", true, ds.isVersionable());
-        assertEquals("Should have proper label", QucosaMETSFileHandler.DS_ID_SLUBINFO_LABEL, ds.getLabel());
+        assertEquals("Should have proper label", "SLUB Administrative Metadata", ds.getLabel());
     }
 
     @Test
@@ -143,12 +150,12 @@ public class QucosaMETSFileHandlerTest {
 
         fh.ingestDeposit(buildDeposit(METS_FILE_OK), buildServiceDocument());
 
-        Datastream ds = getDatastream(QucosaMETSFileHandler.DS_ID_MODS, mockFedoraObject);
+        Datastream ds = getDatastream("MODS", mockFedoraObject);
         assertNotNull("Should have datastream", ds);
         assertEquals("Should have MODS mimetype", "application/mods+xml", ds.getMimeType());
         assertEquals("Should be active", State.ACTIVE, ds.getState());
         assertEquals("Should be versionable", true, ds.isVersionable());
-        assertEquals("Should have proper label", QucosaMETSFileHandler.DS_ID_MODS_LABEL, ds.getLabel());
+        assertEquals("Should have proper label", "Object Bibliographic Metadata", ds.getLabel());
     }
 
     @Test
@@ -168,6 +175,34 @@ public class QucosaMETSFileHandlerTest {
         assertEquals("Should have proper label", "Attachment", ds.getLabel());
     }
 
+    @Test
+    public void localDatastreamShouldNotDeleteSourceFile() throws Exception {
+        FileHandler fh = new QucosaMETSFileHandler();
+        when(mockFedoraObject.getDC()).thenReturn(new DublinCore());
+        doCallRealMethod().when(mockFedoraObject).setDatastreams(Matchers.<List<Datastream>>any());
+        doCallRealMethod().when(mockFedoraObject).getDatastreams();
+
+        fh.ingestDeposit(buildDeposit(METS_FILE_OK), buildServiceDocument());
+
+        LocalDatastream lds = (LocalDatastream) getDatastream("ATT-1", mockFedoraObject);
+        assertFalse("Should not delete source file", lds.isCleanup());
+    }
+
+
+    @Test
+    public void deletesSourceFile() throws Exception {
+        FileHandler fh = new QucosaMETSFileHandler();
+        when(mockFedoraObject.getDC()).thenReturn(new DublinCore());
+        doCallRealMethod().when(mockFedoraObject).setDatastreams(Matchers.<List<Datastream>>any());
+        doCallRealMethod().when(mockFedoraObject).getDatastreams();
+        File tmpFile = File.createTempFile(this.getClass().getName(), String.valueOf(UUID.randomUUID()));
+        tmpFile.deleteOnExit();
+
+        fh.ingestDeposit(buildDepositWithTempFile(METS_FILE_OK, tmpFile.toURI().toASCIIString()), buildServiceDocument());
+
+        assertFalse(tmpFile.exists());
+    }
+
     @Test(expected = SWORDException.class)
     public void exceptionOnMissingMODS() throws Exception {
         FileHandler fh = new QucosaMETSFileHandler();
@@ -184,14 +219,34 @@ public class QucosaMETSFileHandlerTest {
         fh.ingestDeposit(buildDeposit(METS_FILE_BAD2), buildServiceDocument());
     }
 
-    private DepositCollection buildDeposit(String metsFile) {
+    private DepositCollection buildDeposit(String metsFileName) {
+        return buildDeposit(System.class.getResourceAsStream(metsFileName));
+    }
+
+    private DepositCollection buildDeposit(InputStream mets) {
         Deposit dp = new Deposit();
         dp.setContentType(MEDIA_TYPE);
         dp.setUsername(USERNAME);
         dp.setOnBehalfOf(SUBMITTER);
-        dp.setFile(System.class.getResourceAsStream(metsFile));
+        dp.setFile(mets);
         dp.setNoOp(true);
         return new DepositCollection(dp, COLLECTION);
+    }
+
+    private DepositCollection buildDepositWithTempFile(String metsFileName, String uri) throws Exception {
+        Document document = new SAXBuilder().build(
+                System.class.getResourceAsStream(metsFileName));
+        final Namespace METS = Namespace.getNamespace("mets", "http://www.loc.gov/METS/");
+        final Namespace XLINK = Namespace.getNamespace("xlink", "http://www.w3.org/1999/xlink");
+        XPath xp2 = XPath.newInstance("//mets:file[@ID='ATT-1']");
+        xp2.addNamespace(METS);
+        Element file1 = (Element) xp2.selectSingleNode(document);
+        Element file2 = (Element) file1.clone();
+        file2.setAttribute("ID", String.valueOf(UUID.randomUUID()));
+        file2.getChild("FLocat", METS).setAttribute("href", uri, XLINK);
+        file2.getChild("FLocat", METS).setAttribute("USE", "TEMPORARY");
+        file1.getParentElement().addContent(file2);
+        return buildDeposit(IOUtils.toInputStream(new XMLOutputter().outputString(document)));
     }
 
     private ServiceDocument buildServiceDocument() throws Exception {

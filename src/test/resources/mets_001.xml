@@ -99,7 +99,7 @@
             <mets:file ID="ATT-1" MIMETYPE="application/pdf">
                 <mets:FLocat xmlns:xlin="http://www.w3.org/1999/xlink"
                              LOCTYPE="URL"
-                             xlin:href="http://localhost:8080/fedora/objects/qucosa:1/datastreams/ATT-1/content"
+                             xlin:href="file:/Attachment.pdf"
                              xlin:title="Attachment"
                         />
             </mets:file>

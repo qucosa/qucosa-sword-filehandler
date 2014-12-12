@@ -29,8 +29,10 @@ import org.purl.sword.base.ServiceDocument;
 import org.purl.sword.server.fedora.baseExtensions.DepositCollection;
 import org.purl.sword.server.fedora.fedoraObjects.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -38,17 +40,18 @@ import java.util.Map;
 
 public class QucosaMETSFileHandler extends DefaultFileHandler {
 
-    public static final Namespace METS = Namespace.getNamespace("mets", "http://www.loc.gov/METS/");
-    public static final Namespace MODS = Namespace.getNamespace("mods", "http://www.loc.gov/mods/v3");
-    public static final Namespace XLINK = Namespace.getNamespace("xlink", "http://www.w3.org/1999/xlink");
-    public static final Namespace SLUB = Namespace.getNamespace("slub", "http://slub-dresden.de");
-    public static final String DS_ID_SLUBINFO = "SLUB-INFO";
-    public static final String DS_ID_SLUBINFO_LABEL = "SLUB Administrative Metadata";
-    public static final String DS_ID_MODS = "MODS";
-    public static final String DS_ID_MODS_LABEL = "Object Bibliographic Metadata";
-    private static final Logger log = Logger.getLogger(METSFileHandler.class);
+    private static final Namespace METS = Namespace.getNamespace("mets", "http://www.loc.gov/METS/");
+    private static final Namespace MODS = Namespace.getNamespace("mods", "http://www.loc.gov/mods/v3");
+    private static final Namespace XLINK = Namespace.getNamespace("xlink", "http://www.w3.org/1999/xlink");
+    private static final Namespace SLUB = Namespace.getNamespace("slub", "http://slub-dresden.de");
+    private static final String DS_ID_SLUBINFO = "SLUB-INFO";
+    private static final String DS_ID_SLUBINFO_LABEL = "SLUB Administrative Metadata";
+    private static final String DS_ID_MODS = "MODS";
+    private static final String DS_ID_MODS_LABEL = "Object Bibliographic Metadata";
+    private static final Logger log = Logger.getLogger(QucosaMETSFileHandler.class);
     private final Map<String, XPathQuery> queries;
     private Document metsDocument;
+    private List<File> filesMarkedForRemoval = new LinkedList<>();
 
     public QucosaMETSFileHandler() throws JDOMException {
         super("application/vnd.qucosa.mets+xml", "");
@@ -58,7 +61,9 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
     @Override
     public SWORDEntry ingestDeposit(DepositCollection pDeposit, ServiceDocument pServiceDocument) throws SWORDException {
         metsDocument = loadMetsXml(pDeposit.getFile());
-        return super.ingestDeposit(pDeposit, pServiceDocument);
+        SWORDEntry result = super.ingestDeposit(pDeposit, pServiceDocument);
+        delete(filesMarkedForRemoval);
+        return result;
     }
 
     @Override
@@ -98,6 +103,18 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         if (es != null) list.addAll(es);
     }
 
+    private void delete(List<File> files) {
+        for (File f : files) {
+            if (!f.delete()) {
+                log.warn("Unsuccessful delete attempt for " + f.getAbsolutePath());
+            }
+        }
+    }
+
+    private String emptyIfNull(String s) {
+        return (s == null) ? "" : s;
+    }
+
     private List<Datastream> getFileDatastreams() throws SWORDException {
         List<Datastream> datastreamList = new LinkedList<>();
         try {
@@ -106,8 +123,18 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
                 final String mimetype = validateAndSet("mime type", e.getAttributeValue("MIMETYPE"));
                 final Element fLocat = validateAndSet("FLocat element", e.getChild("FLocat", METS));
                 final String href = validateAndSet("file content URL", fLocat.getAttributeValue("href", XLINK));
-                Datastream ds = new LocalDatastream(id, mimetype, href);
+                LocalDatastream ds = new LocalDatastream(id, mimetype, href);
+                ds.setCleanup(false); // no automatic cleanup
                 ds.setLabel(fLocat.getAttributeValue("title", XLINK));
+                if (emptyIfNull(fLocat.getAttributeValue("USE")).equals("TEMPORARY")) {
+                    // mark temporary file for deletion
+                    try {
+                        final URI uri = new URI(ds.getPath());
+                        filesMarkedForRemoval.add(new File(uri));
+                    } catch (Exception ex) {
+                        log.warn("Cannot mark file for deletion: " + ex.getMessage());
+                    }
+                }
                 datastreamList.add(ds);
             }
         } catch (JDOMException e) {
@@ -226,6 +253,5 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
             }
             return resultList;
         }
-
     }
 }
