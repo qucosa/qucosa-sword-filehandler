@@ -33,6 +33,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -60,9 +63,22 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
 
     @Override
     public SWORDEntry ingestDeposit(DepositCollection pDeposit, ServiceDocument pServiceDocument) throws SWORDException {
+        // No MD5 check needed here as this is handled by DepositServlet earlier
         metsDocument = loadMetsXml(pDeposit.getFile());
         SWORDEntry result = super.ingestDeposit(pDeposit, pServiceDocument);
         delete(filesMarkedForRemoval);
+        return result;
+    }
+
+    @Override
+    public SWORDEntry updateDeposit(DepositCollection deposit, ServiceDocument serviceDocument) throws SWORDException {
+        InputStream in = prepInputStreamForDigestCheck(deposit.getFile());
+        metsDocument = loadMetsXml(in);
+        if (hasMd5(deposit)) {
+            assertMd5(in, deposit.getMd5());
+        }
+        // TODO Implement update
+        SWORDEntry result = new SWORDEntry();
         return result;
     }
 
@@ -101,6 +117,21 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
 
     private <E> void addIfNotNull(List<E> list, List<E> es) {
         if (es != null) list.addAll(es);
+    }
+
+    private void assertMd5(InputStream in, String md5) throws SWORDException {
+        if (in instanceof DigestInputStream) {
+            StringBuilder sb = new StringBuilder();
+            for (byte b : ((DigestInputStream) in).getMessageDigest().digest()) {
+                sb.append(String.format("%02x", b));
+            }
+            String digest = sb.toString();
+
+            if (!digest.equals(md5)) {
+                log.warn("Bad MD5 for submitted content: " + digest + ". Expected: " + md5);
+                throw new SWORDException("The received MD5 checksum for the deposited file did not match the checksum sent by the deposit client");
+            }
+        }
     }
 
     private void delete(List<File> files) {
@@ -180,6 +211,10 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         return result;
     }
 
+    private boolean hasMd5(DepositCollection deposit) {
+        return (deposit.getMd5() != null) && (!deposit.getMd5().isEmpty());
+    }
+
     private Map<String, XPathQuery> initializeXPathQueries() throws JDOMException {
         final String MODS_PREFIX = "/mets:mets/mets:dmdSec/mets:mdWrap[@MDTYPE='MODS']/mets:xmlData/mods:mods";
         final String METS_AMDSEC_PREFIX = "/mets:mets/mets:amdSec/mets:rightsMD";
@@ -205,6 +240,16 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
             log.error(message);
             throw new SWORDException(message, e);
         }
+    }
+
+    private InputStream prepInputStreamForDigestCheck(final InputStream in) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("MD5");
+            return new DigestInputStream(in, digest);
+        } catch (NoSuchAlgorithmException e) {
+            log.warn("Cannot check MD5 digest: " + e.getMessage());
+        }
+        return in;
     }
 
     private <E> E validateAndSet(String description, E value) throws SWORDException {

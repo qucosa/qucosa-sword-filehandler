@@ -52,6 +52,8 @@ abstract class QucosaMETSFileHandlerTest {
     public static final String METS_FILE_OK = "/mets_001.xml";
     public static final String METS_FILE_BAD = "/mets_002.xml";
     public static final String METS_FILE_BAD2 = "/mets_003.xml";
+    public static final String METS_FILE_UPDATE = "/mets_001_update.xml";
+    public static final String METS_FILE_UPDATE_MD5 = "359ad4cd4ae09043f7ef1f80b1f445a4";
 
     FedoraObject mockFedoraObject;
 
