@@ -20,7 +20,7 @@ import org.junit.Test;
 import org.purl.sword.base.SWORDException;
 import org.purl.sword.server.fedora.baseExtensions.DepositCollection;
 
-public class QucosaMETSFileHandlerUpdateTest extends QucosaMETSFileHandlerTest {
+public class QucosaMETSFileHandler_UpdateTest extends QucosaMETSFileHandler_AbstractTest {
 
     @Test(expected = SWORDException.class)
     public void md5CheckFails() throws Exception {
@@ -43,6 +43,15 @@ public class QucosaMETSFileHandlerUpdateTest extends QucosaMETSFileHandlerTest {
         FileHandler fh = new QucosaMETSFileHandler();
         final DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE);
         fh.updateDeposit(depositCollection, buildServiceDocument());
+    }
+
+    @Test
+    public void modsGetsUpdated() throws Exception {
+        FileHandler fh = new QucosaMETSFileHandler();
+
+        fh.updateDeposit(buildDeposit(METS_FILE_UPDATE), buildServiceDocument());
+
+        // TODO Assert MODS has changed
     }
 
     private String reverse(String s) {

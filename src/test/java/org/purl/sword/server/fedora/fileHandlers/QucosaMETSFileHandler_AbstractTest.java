@@ -32,6 +32,7 @@ import org.purl.sword.base.ServiceDocument;
 import org.purl.sword.server.fedora.baseExtensions.DepositCollection;
 import org.purl.sword.server.fedora.fedoraObjects.Datastream;
 import org.purl.sword.server.fedora.fedoraObjects.FedoraObject;
+import org.purl.sword.server.fedora.fedoraObjects.FedoraRepository;
 import org.purl.sword.server.fedora.utils.StartupListener;
 import org.purl.sword.server.fedora.utils.XMLProperties;
 
@@ -43,7 +44,7 @@ import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({StartupListener.class, DefaultFileHandler.class})
-abstract class QucosaMETSFileHandlerTest {
+abstract class QucosaMETSFileHandler_AbstractTest {
 
     public static final String MEDIA_TYPE = "application/vnd.qucosa.mets+xml";
     public static final String COLLECTION = "collection:open";
@@ -53,9 +54,11 @@ abstract class QucosaMETSFileHandlerTest {
     public static final String METS_FILE_BAD = "/mets_002.xml";
     public static final String METS_FILE_BAD2 = "/mets_003.xml";
     public static final String METS_FILE_UPDATE = "/mets_001_update.xml";
-    public static final String METS_FILE_UPDATE_MD5 = "359ad4cd4ae09043f7ef1f80b1f445a4";
+    public static final String METS_FILE_UPDATE_MD5 = "3658251ea6e4b95a1237fdb4ee83b4f6";
 
-    FedoraObject mockFedoraObject;
+    protected FedoraRepository mockFedoraRepository;
+
+    private PIDSequence pidSequence = new PIDSequence("test");
 
     @Before
     public void ensureLocalProperties() {
@@ -65,11 +68,12 @@ abstract class QucosaMETSFileHandlerTest {
     }
 
     @Before
-    public void setupFedoraObjectMock() throws Exception {
-        mockFedoraObject = mock(FedoraObject.class);
-        PowerMockito.whenNew(FedoraObject.class)
+    public void setupFedoraRepositoryMock() throws Exception {
+        mockFedoraRepository = mock(FedoraRepository.class);
+        PowerMockito.whenNew(FedoraRepository.class)
                 .withAnyArguments()
-                .thenReturn(mockFedoraObject);
+                .thenReturn(mockFedoraRepository);
+        when(mockFedoraRepository.mintPid()).thenReturn(pidSequence.next());
     }
 
     DepositCollection buildDeposit(String metsFileName) {
@@ -82,7 +86,6 @@ abstract class QucosaMETSFileHandlerTest {
         dp.setUsername(USERNAME);
         dp.setOnBehalfOf(SUBMITTER);
         dp.setFile(mets);
-        dp.setNoOp(true);
         return new DepositCollection(dp, COLLECTION);
     }
 
@@ -113,4 +116,16 @@ abstract class QucosaMETSFileHandlerTest {
         return null;
     }
 
+    private class PIDSequence {
+        final String prefix;
+        int i;
+
+        private PIDSequence(String prefix) {
+            this.prefix = prefix;
+        }
+
+        public String next() {
+            return "test:" + (i++);
+        }
+    }
 }
