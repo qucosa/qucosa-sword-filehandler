@@ -17,8 +17,14 @@
 package org.purl.sword.server.fedora.fileHandlers;
 
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.purl.sword.base.SWORDException;
 import org.purl.sword.server.fedora.baseExtensions.DepositCollection;
+import org.purl.sword.server.fedora.fedoraObjects.Datastream;
+
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class QucosaMETSFileHandler_UpdateTest extends QucosaMETSFileHandler_AbstractTest {
 
@@ -48,10 +54,18 @@ public class QucosaMETSFileHandler_UpdateTest extends QucosaMETSFileHandler_Abst
     @Test
     public void modsGetsUpdated() throws Exception {
         FileHandler fh = new QucosaMETSFileHandler();
+        when(mockFedoraRepository.hasDatastream(eq("test:1"), eq("MODS"))).thenReturn(true);
+        ArgumentCaptor<Datastream> argument = ArgumentCaptor.forClass(Datastream.class);
+        DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE);
+        depositCollection.setDepositID("test:1");
+        fh.updateDeposit(depositCollection, buildServiceDocument());
+
+        verify(mockFedoraRepository).modifyDatastream(eq("test:1"), argument.capture(), anyString());
+    }
+
 
         fh.updateDeposit(buildDeposit(METS_FILE_UPDATE), buildServiceDocument());
 
-        // TODO Assert MODS has changed
     }
 
     private String reverse(String s) {

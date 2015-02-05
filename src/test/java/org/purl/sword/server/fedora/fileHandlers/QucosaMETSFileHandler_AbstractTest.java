@@ -37,13 +37,20 @@ import org.purl.sword.server.fedora.utils.StartupListener;
 import org.purl.sword.server.fedora.utils.XMLProperties;
 
 import java.io.InputStream;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
 import java.util.UUID;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.powermock.api.support.membermodification.MemberMatcher.method;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({StartupListener.class, DefaultFileHandler.class})
+@PrepareForTest({
+        StartupListener.class,
+        DefaultFileHandler.class,
+        FedoraRepository.class,
+        QucosaMETSFileHandler.class})
 abstract class QucosaMETSFileHandler_AbstractTest {
 
     public static final String MEDIA_TYPE = "application/vnd.qucosa.mets+xml";
@@ -58,8 +65,6 @@ abstract class QucosaMETSFileHandler_AbstractTest {
 
     protected FedoraRepository mockFedoraRepository;
 
-    private PIDSequence pidSequence = new PIDSequence("test");
-
     @Before
     public void ensureLocalProperties() {
         PowerMockito.mockStatic(StartupListener.class);
@@ -73,7 +78,16 @@ abstract class QucosaMETSFileHandler_AbstractTest {
         PowerMockito.whenNew(FedoraRepository.class)
                 .withAnyArguments()
                 .thenReturn(mockFedoraRepository);
-        when(mockFedoraRepository.mintPid()).thenReturn(pidSequence.next());
+        PowerMockito.replace(method(FedoraRepository.class, "mintPid")).with(
+                new InvocationHandler() {
+                    private int i = 1;
+
+                    @Override
+                    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                        return "test:" + (i++);
+                    }
+                });
+        when(mockFedoraRepository.mintPid()).thenCallRealMethod();
     }
 
     DepositCollection buildDeposit(String metsFileName) {
@@ -116,16 +130,4 @@ abstract class QucosaMETSFileHandler_AbstractTest {
         return null;
     }
 
-    private class PIDSequence {
-        final String prefix;
-        int i;
-
-        private PIDSequence(String prefix) {
-            this.prefix = prefix;
-        }
-
-        public String next() {
-            return "test:" + (i++);
-        }
-    }
 }

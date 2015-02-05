@@ -77,9 +77,37 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         if (hasMd5(deposit)) {
             assertMd5(in, deposit.getMd5());
         }
-        // TODO Implement update
+
+        FedoraRepository repository = new FedoraRepository(_props, deposit.getUsername(), deposit.getPassword());
+        repository.connect();
+
+        final String pid = deposit.getDepositID();
+        {
+            // update MODS datastream if present in deposit and repository
+            Datastream modsDS = getModsDatastream();
+            if (modsDS != null) {
+                if (repository.hasDatastream(pid, modsDS.getId())) {
+                    repository.modifyDatastream(pid, modsDS, null);
+                }
+            }
+
+        }
+
         SWORDEntry result = new SWORDEntry();
         return result;
+    }
+
+    @Override
+    public void validateObject(FedoraObject fedoraObject) throws SWORDException {
+        // ensure there is a MODS datastream
+        boolean modsExists = false;
+        for (Datastream ds : fedoraObject.getDatastreams()) {
+            if (ds.getId().equals("MODS")) {
+                modsExists = true;
+                break;
+            }
+        }
+        if (!modsExists) throw new SWORDException("Missing MODS datastream in METS source");
     }
 
     @Override
@@ -185,7 +213,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
                 result.setLabel(DS_ID_MODS_LABEL);
                 result.setMimeType("application/mods+xml");
             } else {
-                throw new SWORDException("Missing MODS datastream in METS source");
+                return null;
             }
         } catch (JDOMException e) {
             log.error(e);
