@@ -54,9 +54,15 @@
     <mets:fileGrp USE="ORIGINAL">
       <!--
         DIFF:     Removed <mets:FLocat>, set @USE
-        USE CASE: Delete ATT-1 datastream
+        USE CASE: Replacing ATT-1 datastream
       -->
-      <mets:file ID="ATT-1" MIMETYPE="application/pdf" USE="DELETE"/>
+      <mets:file ID="ATT-1" MIMETYPE="application/pdf">
+        <mets:FLocat xmlns:xlin="http://www.w3.org/1999/xlink"
+                     LOCTYPE="URL"
+                     USE="TEMPORARY"
+                     xlin:href="file:/Attachment.pdf"
+                     xlin:title="Attachment"/>
+      </mets:file>
     </mets:fileGrp>
   </mets:fileSec>
   <mets:structMap>

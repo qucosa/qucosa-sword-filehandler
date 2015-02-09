@@ -43,6 +43,7 @@ import java.util.Map;
 
 public class QucosaMETSFileHandler extends DefaultFileHandler {
 
+    private static final String P_MIME_TYPE = "application/mods+xml";
     private static final Namespace METS = Namespace.getNamespace("mets", "http://www.loc.gov/METS/");
     private static final Namespace MODS = Namespace.getNamespace("mods", "http://www.loc.gov/mods/v3");
     private static final Namespace XLINK = Namespace.getNamespace("xlink", "http://www.w3.org/1999/xlink");
@@ -70,6 +71,36 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         return result;
     }
 
+    /**
+     * Use deposit information to update an existing Fedora object.
+     * <p/>
+     * Content of the given deposit must be a METS XML file, just like for ingestDeposit().
+     * Not all of the METS sections have to be present. Special information about the kind
+     * of update can be encoded in METS attributes.
+     * <p/>
+     * 1. Sections that are not present are not modified.
+     * <p/>
+     * 2. If a <mets:mdWrap MDTYPE="MODS"> element is present in <mets:dmdSec> the MODS
+     * datastream gets replaced with XML within <mets:xmlData>. MODS datastream cannot be
+     * deleted.
+     * <p/>
+     * 3. To delete datastream information an explicit "DELETE" state has to be encoded in
+     * the USE attribute of file sections. The datastream will not be removed from the
+     * repository, instead it's state will change to DELETED.
+     * <p/>
+     * 4. To add a new datastream a new <mets:file> with an unused ID has to be present, holding
+     * an <mets:FLocat> element describing the upload.
+     * <p/>
+     * 5. To replace an existing datastream with a newer version a <mets:file> element has to be
+     * present, having an ID value equal to the DSID of an existing datastream.
+     * <p/>
+     * All datastream actions apply to the object PID specified in the deposit.
+     *
+     * @param deposit         The deposit
+     * @param serviceDocument The service document
+     * @return SWORDEntry with deposit result and links.
+     * @throws SWORDException if something goes wrong
+     */
     @Override
     public SWORDEntry updateDeposit(DepositCollection deposit, ServiceDocument serviceDocument) throws SWORDException {
         InputStream in = prepInputStreamForDigestCheck(deposit.getFile());
@@ -83,14 +114,8 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
 
         final String pid = deposit.getDepositID();
         {
-            // update MODS datastream if present in deposit and repository
-            Datastream modsDS = getModsDatastream();
-            if (modsDS != null) {
-                if (repository.hasDatastream(pid, modsDS.getId())) {
-                    repository.modifyDatastream(pid, modsDS, null);
-                }
-            }
-
+            updateModsDatastream(repository, pid, getModsDatastream(metsDocument));
+            updateAttachmentDatastreams(repository, pid, getFileDatastreams(metsDocument, filesMarkedForRemoval));
         }
 
         SWORDEntry result = new SWORDEntry();
@@ -133,9 +158,9 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
     @Override
     protected List<Datastream> getDatastreams(DepositCollection pDeposit) throws IOException, SWORDException {
         LinkedList<Datastream> resultList = new LinkedList<>();
-        addIfNotNull(resultList, getSlubInfoDatastream());
-        addIfNotNull(resultList, getModsDatastream());
-        addIfNotNull(resultList, getFileDatastreams());
+        addIfNotNull(resultList, getSlubInfoDatastream(metsDocument));
+        addIfNotNull(resultList, getModsDatastream(metsDocument));
+        addIfNotNull(resultList, getFileDatastreams(metsDocument, filesMarkedForRemoval));
         return resultList;
     }
 
@@ -174,27 +199,31 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         return (s == null) ? "" : s;
     }
 
-    private List<Datastream> getFileDatastreams() throws SWORDException {
+    private List<Datastream> getFileDatastreams(Document metsDocument, List<File> filesMarkedForRemoval) throws SWORDException {
         List<Datastream> datastreamList = new LinkedList<>();
         try {
             for (Element e : queries.get("files").selectNodes(metsDocument)) {
                 final String id = validateAndSet("file ID", e.getAttributeValue("ID"));
-                final String mimetype = validateAndSet("mime type", e.getAttributeValue("MIMETYPE"));
-                final Element fLocat = validateAndSet("FLocat element", e.getChild("FLocat", METS));
-                final String href = validateAndSet("file content URL", fLocat.getAttributeValue("href", XLINK));
-                LocalDatastream ds = new LocalDatastream(id, mimetype, href);
-                ds.setCleanup(false); // no automatic cleanup
-                ds.setLabel(fLocat.getAttributeValue("title", XLINK));
-                if (emptyIfNull(fLocat.getAttributeValue("USE")).equals("TEMPORARY")) {
-                    // mark temporary file for deletion
-                    try {
-                        final URI uri = new URI(ds.getPath());
-                        filesMarkedForRemoval.add(new File(uri));
-                    } catch (Exception ex) {
-                        log.warn("Cannot mark file for deletion: " + ex.getMessage());
+                if (e.getAttributeValue("USE") != null && e.getAttributeValue("USE").equals("DELETE")) {
+                    datastreamList.add(new VoidDatastream(id));
+                } else {
+                    final String mimetype = validateAndSet("mime type", e.getAttributeValue("MIMETYPE"));
+                    final Element fLocat = validateAndSet("FLocat element", e.getChild("FLocat", METS));
+                    final String href = validateAndSet("file content URL", fLocat.getAttributeValue("href", XLINK));
+                    LocalDatastream ds = new LocalDatastream(id, mimetype, href);
+                    ds.setCleanup(false); // no automatic cleanup
+                    ds.setLabel(fLocat.getAttributeValue("title", XLINK));
+                    if (emptyIfNull(fLocat.getAttributeValue("USE")).equals("TEMPORARY")) {
+                        // mark temporary file for deletion
+                        try {
+                            final URI uri = new URI(ds.getPath());
+                            filesMarkedForRemoval.add(new File(uri));
+                        } catch (Exception ex) {
+                            log.warn("Cannot mark file for deletion: " + ex.getMessage());
+                        }
                     }
+                    datastreamList.add(ds);
                 }
-                datastreamList.add(ds);
             }
         } catch (JDOMException e) {
             log.error(e);
@@ -203,7 +232,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         return datastreamList;
     }
 
-    private Datastream getModsDatastream() throws SWORDException {
+    private Datastream getModsDatastream(Document metsDocument) throws SWORDException {
         Datastream result;
         try {
             Element el = queries.get("mods").selectNode(metsDocument);
@@ -211,7 +240,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
                 Document d = new Document((Element) el.clone());
                 result = new XMLInlineDatastream(DS_ID_MODS, d);
                 result.setLabel(DS_ID_MODS_LABEL);
-                result.setMimeType("application/mods+xml");
+                result.setMimeType(P_MIME_TYPE);
             } else {
                 return null;
             }
@@ -222,7 +251,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         return result;
     }
 
-    private Datastream getSlubInfoDatastream() {
+    private Datastream getSlubInfoDatastream(Document metsDocument) {
         Datastream result = null;
         try {
             Element el = queries.get("slubrights_mdwrap").selectNode(metsDocument);
@@ -278,6 +307,30 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
             log.warn("Cannot check MD5 digest: " + e.getMessage());
         }
         return in;
+    }
+
+    private void updateAttachmentDatastreams(FedoraRepository repository, String pid, List<Datastream> datastreams) throws SWORDException {
+        for (Datastream attDatastream : datastreams) {
+            if (attDatastream instanceof VoidDatastream) {
+                if (repository.hasDatastream(pid, attDatastream.getId())) {
+                    repository.setDatastreamState(pid, attDatastream.getId(), State.DELETED, null);
+                }
+            } else {
+                if (repository.hasDatastream(pid, attDatastream.getId())) {
+                    repository.modifyDatastream(pid, attDatastream, null);
+                } else {
+                    repository.addDatastream(pid, attDatastream, null);
+                }
+            }
+        }
+    }
+
+    private void updateModsDatastream(FedoraRepository repository, String pid, Datastream modsDatastream) throws SWORDException {
+        if (modsDatastream != null) {
+            if (repository.hasDatastream(pid, modsDatastream.getId())) {
+                repository.modifyDatastream(pid, modsDatastream, null);
+            }
+        }
     }
 
     private <E> E validateAndSet(String description, E value) throws SWORDException {

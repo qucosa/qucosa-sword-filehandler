@@ -21,8 +21,11 @@ import org.mockito.ArgumentCaptor;
 import org.purl.sword.base.SWORDException;
 import org.purl.sword.server.fedora.baseExtensions.DepositCollection;
 import org.purl.sword.server.fedora.fedoraObjects.Datastream;
+import org.purl.sword.server.fedora.fedoraObjects.State;
 
-import static org.mockito.Matchers.*;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -63,9 +66,51 @@ public class QucosaMETSFileHandler_UpdateTest extends QucosaMETSFileHandler_Abst
         verify(mockFedoraRepository).modifyDatastream(eq("test:1"), argument.capture(), anyString());
     }
 
+    @Test
+    public void datastreamGetsUpdated() throws Exception {
+        FileHandler fh = new QucosaMETSFileHandler();
+        when(mockFedoraRepository.hasDatastream(eq("test:1"), eq("ATT-1"))).thenReturn(true);
+        ArgumentCaptor<Datastream> argument = ArgumentCaptor.forClass(Datastream.class);
+        DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE);
+        depositCollection.setDepositID("test:1");
 
-        fh.updateDeposit(buildDeposit(METS_FILE_UPDATE), buildServiceDocument());
+        fh.updateDeposit(depositCollection, buildServiceDocument());
 
+        verify(mockFedoraRepository).modifyDatastream(
+                eq("test:1"),
+                argument.capture(),
+                anyString());
+        assertEquals("Attachment", argument.getValue().getLabel());
+    }
+
+    @Test
+    public void datastreamGetsAdded() throws Exception {
+        FileHandler fh = new QucosaMETSFileHandler();
+        when(mockFedoraRepository.hasDatastream(eq("test:1"), eq("ATT-2"))).thenReturn(false);
+        ArgumentCaptor<Datastream> argument = ArgumentCaptor.forClass(Datastream.class);
+        DepositCollection depositCollection = buildDeposit(METS_FILE_ADD_DS);
+        depositCollection.setDepositID("test:1");
+
+        fh.updateDeposit(depositCollection, buildServiceDocument());
+
+        verify(mockFedoraRepository).addDatastream(
+                eq("test:1"),
+                argument.capture(),
+                anyString());
+        assertEquals("ATT-2", argument.getValue().getId());
+    }
+
+    @Test
+    public void datatsreamGetsDeleted() throws Exception {
+        FileHandler fh = new QucosaMETSFileHandler();
+        when(mockFedoraRepository.hasDatastream(eq("test:1"), eq("ATT-1"))).thenReturn(true);
+        DepositCollection depositCollection = buildDeposit(METS_FILE_DELETE_DS);
+        depositCollection.setDepositID("test:1");
+
+        fh.updateDeposit(depositCollection, buildServiceDocument());
+
+        verify(mockFedoraRepository).setDatastreamState(
+                eq("test:1"), eq("ATT-1"), eq(State.DELETED), anyString());
     }
 
     private String reverse(String s) {

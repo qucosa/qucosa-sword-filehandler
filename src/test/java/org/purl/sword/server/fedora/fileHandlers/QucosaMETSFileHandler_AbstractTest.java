@@ -60,8 +60,10 @@ abstract class QucosaMETSFileHandler_AbstractTest {
     public static final String METS_FILE_OK = "/mets_001.xml";
     public static final String METS_FILE_BAD = "/mets_002.xml";
     public static final String METS_FILE_BAD2 = "/mets_003.xml";
+    public static final String METS_FILE_ADD_DS = "/mets_001_add_ds.xml";
+    public static final String METS_FILE_DELETE_DS = "/mets_001_delete_ds.xml";
     public static final String METS_FILE_UPDATE = "/mets_001_update.xml";
-    public static final String METS_FILE_UPDATE_MD5 = "3658251ea6e4b95a1237fdb4ee83b4f6";
+    public static final String METS_FILE_UPDATE_MD5 = "df82caadb96505f7f5ead30564cdaa7f";
 
     protected FedoraRepository mockFedoraRepository;
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright 2014 Saxon State and University Library Dresden (SLUB)
+  ~ Copyright 2015 Saxon State and University Library Dresden (SLUB)
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -17,19 +17,19 @@
 
 <mets:mets xmlns:mets="http://www.loc.gov/METS/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OBJID="qucosa:1"
            xsi:schemaLocation="http://www.loc.gov/METS/ http://www.loc.gov/standards/mets/mets.xsd">
-    <mets:dmdSec ID="DMD_000"/>
-    <mets:fileSec>
-        <mets:fileGrp USE="ORIGINAL">
-            <mets:file ID="ATT-1" MIMETYPE="application/pdf">
-                <mets:FLocat xmlns:xlin="http://www.w3.org/1999/xlink"
-                             LOCTYPE="URL"
-                             xlin:href="http://localhost:8080/fedora/objects/qucosa:1/datastreams/ATT-1/content"/>
-            </mets:file>
-        </mets:fileGrp>
-    </mets:fileSec>
-    <mets:structMap>
-        <mets:div DMDID="DMD_000" TYPE="article">
-            <mets:fptr FILEID="ATT-1"/>
-        </mets:div>
-    </mets:structMap>
+  <!--
+    DIFF:     Removed <mets:amdSec> and <mets:dmdSec> compared to mets_001.xml
+    USE CASE: Deleting a datastream
+  -->
+  <mets:dmdSec ID="DMD_000"/>
+  <mets:fileSec>
+    <mets:fileGrp USE="ORIGINAL">
+      <mets:file ID="ATT-1" USE="DELETE"/>
+    </mets:fileGrp>
+  </mets:fileSec>
+  <mets:structMap>
+    <mets:div DMDID="DMD_000" TYPE="article">
+      <mets:fptr FILEID="ATT-1"/>
+    </mets:div>
+  </mets:structMap>
 </mets:mets>
