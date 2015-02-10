@@ -18,6 +18,8 @@ package org.purl.sword.server.fedora.fileHandlers;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.purl.sword.atom.Link;
+import org.purl.sword.base.SWORDEntry;
 import org.purl.sword.base.SWORDException;
 import org.purl.sword.server.fedora.baseExtensions.DepositCollection;
 import org.purl.sword.server.fedora.fedoraObjects.Datastream;
@@ -34,23 +36,26 @@ public class QucosaMETSFileHandler_UpdateTest extends QucosaMETSFileHandler_Abst
     @Test(expected = SWORDException.class)
     public void md5CheckFails() throws Exception {
         FileHandler fh = new QucosaMETSFileHandler();
-        final DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE);
+        final DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE, "test:1");
         depositCollection.setMd5(reverse(METS_FILE_UPDATE_MD5));
+
         fh.updateDeposit(depositCollection, buildServiceDocument());
     }
 
     @Test
     public void md5CheckSucceeds() throws Exception {
         FileHandler fh = new QucosaMETSFileHandler();
-        final DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE);
+        final DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE, "test:1");
         depositCollection.setMd5(METS_FILE_UPDATE_MD5);
+
         fh.updateDeposit(depositCollection, buildServiceDocument());
     }
 
     @Test
     public void md5CheckNotPerformedIfNoMd5IsGiven() throws Exception {
         FileHandler fh = new QucosaMETSFileHandler();
-        final DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE);
+        final DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE, "test:1");
+
         fh.updateDeposit(depositCollection, buildServiceDocument());
     }
 
@@ -59,8 +64,8 @@ public class QucosaMETSFileHandler_UpdateTest extends QucosaMETSFileHandler_Abst
         FileHandler fh = new QucosaMETSFileHandler();
         when(mockFedoraRepository.hasDatastream(eq("test:1"), eq("MODS"))).thenReturn(true);
         ArgumentCaptor<Datastream> argument = ArgumentCaptor.forClass(Datastream.class);
-        DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE);
-        depositCollection.setDepositID("test:1");
+        DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE, "test:1");
+
         fh.updateDeposit(depositCollection, buildServiceDocument());
 
         verify(mockFedoraRepository).modifyDatastream(eq("test:1"), argument.capture(), anyString());
@@ -71,8 +76,8 @@ public class QucosaMETSFileHandler_UpdateTest extends QucosaMETSFileHandler_Abst
         FileHandler fh = new QucosaMETSFileHandler();
         when(mockFedoraRepository.hasDatastream(eq("test:1"), eq("SLUB-INFO"))).thenReturn(true);
         ArgumentCaptor<Datastream> argument = ArgumentCaptor.forClass(Datastream.class);
-        DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE);
-        depositCollection.setDepositID("test:1");
+        DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE, "test:1");
+
         fh.updateDeposit(depositCollection, buildServiceDocument());
 
         verify(mockFedoraRepository).modifyDatastream(eq("test:1"), argument.capture(), anyString());
@@ -83,8 +88,8 @@ public class QucosaMETSFileHandler_UpdateTest extends QucosaMETSFileHandler_Abst
         FileHandler fh = new QucosaMETSFileHandler();
         when(mockFedoraRepository.hasDatastream(eq("test:1"), eq("SLUB-INFO"))).thenReturn(true);
         ArgumentCaptor<Datastream> argument = ArgumentCaptor.forClass(Datastream.class);
-        DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE);
-        depositCollection.setDepositID("test:1");
+        DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE, "test:1");
+
         fh.updateDeposit(depositCollection, buildServiceDocument());
 
         verify(mockFedoraRepository).addDatastream(eq("test:1"), argument.capture(), anyString());
@@ -95,8 +100,7 @@ public class QucosaMETSFileHandler_UpdateTest extends QucosaMETSFileHandler_Abst
         FileHandler fh = new QucosaMETSFileHandler();
         when(mockFedoraRepository.hasDatastream(eq("test:1"), eq("ATT-1"))).thenReturn(true);
         ArgumentCaptor<Datastream> argument = ArgumentCaptor.forClass(Datastream.class);
-        DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE);
-        depositCollection.setDepositID("test:1");
+        DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE, "test:1");
 
         fh.updateDeposit(depositCollection, buildServiceDocument());
 
@@ -112,8 +116,7 @@ public class QucosaMETSFileHandler_UpdateTest extends QucosaMETSFileHandler_Abst
         FileHandler fh = new QucosaMETSFileHandler();
         when(mockFedoraRepository.hasDatastream(eq("test:1"), eq("ATT-2"))).thenReturn(false);
         ArgumentCaptor<Datastream> argument = ArgumentCaptor.forClass(Datastream.class);
-        DepositCollection depositCollection = buildDeposit(METS_FILE_ADD_DS);
-        depositCollection.setDepositID("test:1");
+        DepositCollection depositCollection = buildDeposit(METS_FILE_ADD_DS, "test:1");
 
         fh.updateDeposit(depositCollection, buildServiceDocument());
 
@@ -128,13 +131,25 @@ public class QucosaMETSFileHandler_UpdateTest extends QucosaMETSFileHandler_Abst
     public void datatsreamGetsDeleted() throws Exception {
         FileHandler fh = new QucosaMETSFileHandler();
         when(mockFedoraRepository.hasDatastream(eq("test:1"), eq("ATT-1"))).thenReturn(true);
-        DepositCollection depositCollection = buildDeposit(METS_FILE_DELETE_DS);
-        depositCollection.setDepositID("test:1");
+        DepositCollection depositCollection = buildDeposit(METS_FILE_DELETE_DS, "test:1");
 
         fh.updateDeposit(depositCollection, buildServiceDocument());
 
         verify(mockFedoraRepository).setDatastreamState(
                 eq("test:1"), eq("ATT-1"), eq(State.DELETED), anyString());
+    }
+
+    @Test
+    public void swordResultHasCorrectEditLink() throws Exception {
+        FileHandler fh = new QucosaMETSFileHandler();
+        when(mockFedoraRepository.hasDatastream(eq("test:1"), eq("MODS"))).thenReturn(true);
+        DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE, "test:1");
+
+        SWORDEntry swordEntry = fh.updateDeposit(depositCollection, buildServiceDocument());
+
+        Link link = swordEntry.getLinks().next();
+        assertEquals("http://localhost:8080/sword/collection:open/test:1", link.getHref());
+        assertEquals("edit", link.getRel());
     }
 
     private String reverse(String s) {

@@ -132,4 +132,9 @@ abstract class QucosaMETSFileHandler_AbstractTest {
         return null;
     }
 
+    protected DepositCollection buildDeposit(String metsFileName, String depositID) {
+        DepositCollection dp = buildDeposit(metsFileName);
+        dp.setDepositID(depositID);
+        return dp;
+    }
 }

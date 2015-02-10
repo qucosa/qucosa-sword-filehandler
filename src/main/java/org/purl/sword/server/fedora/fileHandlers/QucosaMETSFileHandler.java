@@ -119,7 +119,10 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
             updateOrAdd(repository, pid, getSlubInfoDatastream(metsDocument));
         }
 
-        SWORDEntry result = new SWORDEntry();
+        FedoraObject fedoraObj = new FedoraObject(pid);
+        fedoraObj.setDc(new DublinCore());
+        SWORDEntry result = getSWORDEntry(deposit, serviceDocument, fedoraObj);
+        delete(filesMarkedForRemoval);
         return result;
     }
 
