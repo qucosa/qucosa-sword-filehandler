@@ -46,6 +46,28 @@
       </mets:xmlData>
     </mets:mdWrap>
   </mets:dmdSec>
+  <mets:amdSec ID="AMD_000">
+    <mets:rightsMD ID="RIGHTS_000">
+      <mets:mdWrap MDTYPE="OTHER" OTHERMDTYPE="SLUBRIGHTS" MIMETYPE="application/vnd.slub-info+xml">
+        <mets:xmlData>
+          <slub:info xmlns:slub="http://slub-dresden.de/">
+            <slub:submitter>
+              <slub:name>Frau Administrator</slub:name>
+              <slub:contact>mailto:qucosa.admin@slub-dresden.de</slub:contact>
+            </slub:submitter>
+            <slub:project>OpenAire Project Name</slub:project>
+            <slub:client>Mandant</slub:client>
+            <slub:rights>
+              <slub:license valueURI="URI der Lizenz">Lizenzangabe</slub:license>
+              <slub:embargo encoding="iso8601">2014-11-26</slub:embargo>
+              <slub:accessDNB>false</slub:accessDNB>
+              <slub:accessPOD>false</slub:accessPOD>
+            </slub:rights>
+          </slub:info>
+        </mets:xmlData>
+      </mets:mdWrap>
+    </mets:rightsMD>
+  </mets:amdSec>
   <!--
     DIFF:     Removed <mets:amdSec> compared to mets_001.xml
     USE CASE: NOOP if <mets:amdSec> is not present

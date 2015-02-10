@@ -114,8 +114,9 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
 
         final String pid = deposit.getDepositID();
         {
-            updateModsDatastream(repository, pid, getModsDatastream(metsDocument));
+            updateIfPresent(repository, pid, getModsDatastream(metsDocument));
             updateAttachmentDatastreams(repository, pid, getFileDatastreams(metsDocument, filesMarkedForRemoval));
+            updateOrAdd(repository, pid, getSlubInfoDatastream(metsDocument));
         }
 
         SWORDEntry result = new SWORDEntry();
@@ -325,10 +326,20 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         }
     }
 
-    private void updateModsDatastream(FedoraRepository repository, String pid, Datastream modsDatastream) throws SWORDException {
-        if (modsDatastream != null) {
-            if (repository.hasDatastream(pid, modsDatastream.getId())) {
-                repository.modifyDatastream(pid, modsDatastream, null);
+    private void updateIfPresent(FedoraRepository repository, String pid, Datastream datastream) throws SWORDException {
+        if (datastream != null) {
+            if (repository.hasDatastream(pid, datastream.getId())) {
+                repository.modifyDatastream(pid, datastream, null);
+            }
+        }
+    }
+
+    private void updateOrAdd(FedoraRepository repository, String pid, Datastream datastream) throws SWORDException {
+        if (datastream != null) {
+            if (repository.hasDatastream(pid, datastream.getId())) {
+                repository.modifyDatastream(pid, datastream, null);
+            } else {
+                repository.addDatastream(pid, datastream, null);
             }
         }
     }

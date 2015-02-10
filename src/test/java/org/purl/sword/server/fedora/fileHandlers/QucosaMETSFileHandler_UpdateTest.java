@@ -67,6 +67,30 @@ public class QucosaMETSFileHandler_UpdateTest extends QucosaMETSFileHandler_Abst
     }
 
     @Test
+    public void slubinfoGetsUpdated() throws Exception {
+        FileHandler fh = new QucosaMETSFileHandler();
+        when(mockFedoraRepository.hasDatastream(eq("test:1"), eq("SLUB-INFO"))).thenReturn(true);
+        ArgumentCaptor<Datastream> argument = ArgumentCaptor.forClass(Datastream.class);
+        DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE);
+        depositCollection.setDepositID("test:1");
+        fh.updateDeposit(depositCollection, buildServiceDocument());
+
+        verify(mockFedoraRepository).modifyDatastream(eq("test:1"), argument.capture(), anyString());
+    }
+
+    @Test
+    public void slubinfoGetsAdded() throws Exception {
+        FileHandler fh = new QucosaMETSFileHandler();
+        when(mockFedoraRepository.hasDatastream(eq("test:1"), eq("SLUB-INFO"))).thenReturn(true);
+        ArgumentCaptor<Datastream> argument = ArgumentCaptor.forClass(Datastream.class);
+        DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE);
+        depositCollection.setDepositID("test:1");
+        fh.updateDeposit(depositCollection, buildServiceDocument());
+
+        verify(mockFedoraRepository).addDatastream(eq("test:1"), argument.capture(), anyString());
+    }
+
+    @Test
     public void datastreamGetsUpdated() throws Exception {
         FileHandler fh = new QucosaMETSFileHandler();
         when(mockFedoraRepository.hasDatastream(eq("test:1"), eq("ATT-1"))).thenReturn(true);
