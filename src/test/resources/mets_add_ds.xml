@@ -18,7 +18,7 @@
 <mets:mets xmlns:mets="http://www.loc.gov/METS/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OBJID="qucosa:1"
            xsi:schemaLocation="http://www.loc.gov/METS/ http://www.loc.gov/standards/mets/mets.xsd">
   <!--
-    DIFF:     Removed <mets:amdSec> and <mets:dmdSec> compared to mets_001.xml
+    DIFF:     Removed <mets:amdSec> and <mets:dmdSec> compared to mets_ok.xml
     USE CASE: Adding a datastream
   -->
   <mets:dmdSec ID="DMD_000"/>

@@ -21,7 +21,7 @@
     <mets:mdWrap MDTYPE="MODS">
       <mets:xmlData>
         <!--
-          DIFF:     Removed a lot info tags compared to mets_001.xml
+          DIFF:     Removed a lot info tags compared to mets_ok.xml
           USE CASE: Update if <mets:mdWrap> present
         -->
         <mods:mods xmlns:mods="http://www.loc.gov/mods/v3"
@@ -69,7 +69,7 @@
     </mets:rightsMD>
   </mets:amdSec>
   <!--
-    DIFF:     Removed <mets:amdSec> compared to mets_001.xml
+    DIFF:     Removed <mets:amdSec> compared to mets_ok.xml
     USE CASE: NOOP if <mets:amdSec> is not present
   -->
   <mets:fileSec>

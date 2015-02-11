@@ -57,13 +57,13 @@ abstract class QucosaMETSFileHandler_AbstractTest {
     public static final String COLLECTION = "collection:open";
     public static final String USERNAME = "fedoraAdmin";
     public static final String SUBMITTER = "qucosa";
-    public static final String METS_FILE_OK = "/mets_001.xml";
-    public static final String METS_FILE_BAD = "/mets_002.xml";
-    public static final String METS_FILE_BAD2 = "/mets_003.xml";
-    public static final String METS_FILE_ADD_DS = "/mets_001_add_ds.xml";
-    public static final String METS_FILE_DELETE_DS = "/mets_001_delete_ds.xml";
-    public static final String METS_FILE_UPDATE = "/mets_001_update.xml";
-    public static final String METS_FILE_UPDATE_MD5 = "007fc4c8d889a9c40c97c631b46ef52d";
+    public static final String METS_FILE_OK = "/mets_ok.xml";
+    public static final String METS_FILE_BAD = "/mets_missing_mods.xml";
+    public static final String METS_FILE_BAD2 = "/mets_invalid_file.xml";
+    public static final String METS_FILE_ADD_DS = "/mets_add_ds.xml";
+    public static final String METS_FILE_DELETE_DS = "/mets_delete_ds.xml";
+    public static final String METS_FILE_UPDATE = "/mets_update.xml";
+    public static final String METS_FILE_UPDATE_MD5 = "134cc5db3c2106d0e80a555d727c64d0";
 
     protected FedoraRepository mockFedoraRepository;
 
