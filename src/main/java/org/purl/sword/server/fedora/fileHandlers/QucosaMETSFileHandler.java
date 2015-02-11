@@ -33,6 +33,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -214,24 +215,29 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
                     final String mimetype = validateAndSet("mime type", e.getAttributeValue("MIMETYPE"));
                     final Element fLocat = validateAndSet("FLocat element", e.getChild("FLocat", METS));
                     final String href = validateAndSet("file content URL", fLocat.getAttributeValue("href", XLINK));
-                    LocalDatastream ds = new LocalDatastream(id, mimetype, href);
-                    ds.setCleanup(false); // no automatic cleanup
-                    ds.setLabel(fLocat.getAttributeValue("title", XLINK));
-                    if (emptyIfNull(fLocat.getAttributeValue("USE")).equals("TEMPORARY")) {
-                        // mark temporary file for deletion
-                        try {
-                            final URI uri = new URI(ds.getPath());
-                            filesMarkedForRemoval.add(new File(uri));
-                        } catch (Exception ex) {
-                            log.warn("Cannot mark file for deletion: " + ex.getMessage());
-                        }
+                    final URI uri = new URI(href);
+
+                    Datastream ds;
+                    if (uri.getScheme().equals("file")) {
+                        LocalDatastream lds = new LocalDatastream(id, mimetype, href);
+                        lds.setCleanup(false); // no automatic cleanup
+                        markTemporaryFileForDeletion(filesMarkedForRemoval, uri,
+                                emptyIfNull(fLocat.getAttributeValue("USE")).equals("TEMPORARY"));
+                        ds = lds;
+                    } else {
+                        ds = new ManagedDatastream(id, mimetype, href);
                     }
+
+                    ds.setLabel(fLocat.getAttributeValue("title", XLINK));
                     datastreamList.add(ds);
                 }
             }
         } catch (JDOMException e) {
             log.error(e);
             throw new SWORDException("Cannot obtain file datastreams", e);
+        } catch (URISyntaxException e) {
+            log.error(e);
+            throw new SWORDException("Invalid URL", e);
         }
         return datastreamList;
     }
@@ -300,6 +306,17 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
             String message = "Couldn't retrieve METS from deposit: " + e.toString();
             log.error(message);
             throw new SWORDException(message, e);
+        }
+    }
+
+    private void markTemporaryFileForDeletion(List<File> filesMarkedForRemoval, URI uri, boolean b) {
+        if (b) {
+            // mark temporary file for deletion
+            try {
+                filesMarkedForRemoval.add(new File(uri));
+            } catch (Exception ex) {
+                log.warn("Cannot mark file for deletion: " + ex.getMessage());
+            }
         }
     }
 

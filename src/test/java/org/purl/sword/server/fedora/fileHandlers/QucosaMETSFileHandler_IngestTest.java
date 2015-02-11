@@ -164,4 +164,21 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
         fh.ingestDeposit(buildDeposit(METS_FILE_BAD2), buildServiceDocument());
     }
 
+    @Test
+    public void ingestsHttpFileURL() throws Exception {
+        FileHandler fh = new QucosaMETSFileHandler();
+        ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
+
+        fh.ingestDeposit(buildDeposit(METS_FILE_URL), buildServiceDocument());
+
+        verify(mockFedoraRepository).ingest(argument.capture());
+        Datastream ds = getDatastream("ATT-1", argument.getValue());
+        assertNotNull("Should have datastream", ds);
+        assertEquals("Should have PDF mimetype", "application/pdf", ds.getMimeType());
+        assertEquals("Should be active", State.ACTIVE, ds.getState());
+        assertEquals("Should be versionable", true, ds.isVersionable());
+        assertEquals("Should have proper label", "Attachment", ds.getLabel());
+        assertTrue("Should be ManagedDatastream", ds instanceof ManagedDatastream);
+    }
+
 }

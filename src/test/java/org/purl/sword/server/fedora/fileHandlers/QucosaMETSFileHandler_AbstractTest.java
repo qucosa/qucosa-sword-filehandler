@@ -58,6 +58,7 @@ abstract class QucosaMETSFileHandler_AbstractTest {
     public static final String USERNAME = "fedoraAdmin";
     public static final String SUBMITTER = "qucosa";
     public static final String METS_FILE_OK = "/mets_ok.xml";
+    public static final String METS_FILE_URL = "/mets_url_file.xml";
     public static final String METS_FILE_BAD = "/mets_missing_mods.xml";
     public static final String METS_FILE_BAD2 = "/mets_invalid_file.xml";
     public static final String METS_FILE_ADD_DS = "/mets_add_ds.xml";
