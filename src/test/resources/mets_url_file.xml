@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2015 Saxon State and University Library Dresden (SLUB)
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<mets:mets xmlns:mets="http://www.loc.gov/METS/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OBJID="qucosa:1"
+           xsi:schemaLocation="http://www.loc.gov/METS/ http://www.loc.gov/standards/mets/mets.xsd">
+    <mets:dmdSec ID="DMD_000">
+        <mets:mdWrap MDTYPE="MODS">
+            <mets:xmlData>
+                <mods:mods xmlns:mods="http://www.loc.gov/mods/v3"
+                           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                           version="3.5"
+                           xsi:schemaLocation="http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-5.xsd">
+                    <mods:titleInfo lang="eng" usage="primary">
+                        <mods:title>Highlights from COMPASS in hadron spectroscopy</mods:title>
+                    </mods:titleInfo>
+                    <mods:abstract lang="eng" type="content">Since Quantum Choromdynamics allows for gluon self-coupling, quarks and gluons cannot be observed as free particles, but only their bound states, the hadrons. This so-called confinement phenomenon is responsible for 98% of the mass in the visible universe. The measurement of the hadron excitation spectra therefore gives valuable input for theory and phenomenology to quantitatively understand this phenomenon. One simple model to describe hadrons is the Constituent Quark Model (CQM), which knows two types of hadrons: mesons, consisting of a quark and an antiquark, and baryons, which are made out of three quarks. More advanced models, which are inspired by QCD as well as calculations within Lattice QCD predict the existence of other types of hadrons, which may be e.g. described solely by gluonic excitations (glueballs) or mixed quark and gluon excitations (hybrids). In order to search for such states, the COMPASS experiment at the Super Proton Synchrotron at CERN has collected large data sets, which allow to study the light-quark meson and baryon spectra in unmatched precision. The overview shown here focuses on the light meson sector, presenting a detailed Partial-Wave Analysis of the processes: π−p→π−π+π−p and π−p→π−π0π0p. A new state, the a1(1420) with JPC=1++ is observed. Its Breit-Wigner parameters are found to be in the ranges: m=1412−1422MeV/c2 and Γ=130−150MeV/c2. In the same analysis, a signal in a wave with JPC=1−+ is observed. A resonant origin of this signal would not be explicable within the CQM. In addition to this possibility of an exotic state, a possible non resonant origin of this signal is discussed.
+                    </mods:abstract>
+                </mods:mods>
+            </mets:xmlData>
+        </mets:mdWrap>
+    </mets:dmdSec>
+    <mets:fileSec>
+        <mets:fileGrp USE="ORIGINAL">
+            <mets:file ID="ATT-1" MIMETYPE="application/pdf">
+                <mets:FLocat xmlns:xlin="http://www.w3.org/1999/xlink"
+                             LOCTYPE="URL"
+                             xlin:href="http://arxiv.org/pdf/1501.00133v1.pdf"
+                             xlin:title="Attachment"
+                        />
+            </mets:file>
+        </mets:fileGrp>
+    </mets:fileSec>
+    <mets:structMap>
+        <mets:div DMDID="DMD_000" TYPE="article">
+            <mets:fptr FILEID="ATT-1"/>
+        </mets:div>
+    </mets:structMap>
+</mets:mets>
