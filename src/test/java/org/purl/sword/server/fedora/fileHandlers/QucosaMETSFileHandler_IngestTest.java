@@ -16,10 +16,13 @@
 
 package org.purl.sword.server.fedora.fileHandlers;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.spi.LoggingEvent;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.purl.sword.base.SWORDEntry;
 import org.purl.sword.base.SWORDException;
+import org.purl.sword.server.fedora.baseExtensions.DepositCollection;
 import org.purl.sword.server.fedora.fedoraObjects.*;
 
 import java.io.File;
@@ -176,6 +179,21 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
         assertEquals("Should be versionable", true, ds.isVersionable());
         assertEquals("Should have proper label", "Attachment", ds.getLabel());
         assertTrue("Should be ManagedDatastream", ds instanceof ManagedDatastream);
+    }
+
+    @Test
+    public void warningIfNoOnBehalfHeader() throws Exception {
+        FileHandler fh = new QucosaMETSFileHandler();
+        final DepositCollection deposit = buildDeposit(METS_FILE_URL);
+        deposit.setOnBehalfOf(null);
+        ArgumentCaptor<LoggingEvent> captor = ArgumentCaptor.forClass(LoggingEvent.class);
+
+        fh.ingestDeposit(deposit, buildServiceDocument());
+
+        verify(mockAppender).doAppend(captor.capture());
+        LoggingEvent loggingEvent = captor.getValue();
+        assertTrue(loggingEvent.getMessage().toString().startsWith("X-On-Behalf-Of"));
+        assertEquals(Level.WARN, loggingEvent.getLevel());
     }
 
 }

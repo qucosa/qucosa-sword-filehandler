@@ -16,12 +16,15 @@
 package org.purl.sword.server.fedora.fileHandlers;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.log4j.Appender;
+import org.apache.log4j.LogManager;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.Namespace;
 import org.jdom.input.SAXBuilder;
 import org.jdom.output.XMLOutputter;
 import org.jdom.xpath.XPath;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.powermock.api.mockito.PowerMockito;
@@ -67,6 +70,18 @@ abstract class QucosaMETSFileHandler_AbstractTest {
     public static final String METS_FILE_UPDATE_MD5 = "34e9ee988994bef7da2793f87b675524";
 
     protected FedoraRepository mockFedoraRepository;
+    protected Appender mockAppender;
+
+    @Before
+    public void setupLogging() {
+        mockAppender = mock(Appender.class);
+        LogManager.getRootLogger().addAppender(mockAppender);
+    }
+
+    @After
+    public void teardownLogging() {
+        LogManager.getRootLogger().removeAppender(mockAppender);
+    }
 
     @Before
     public void ensureLocalProperties() {
