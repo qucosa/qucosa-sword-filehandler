@@ -66,10 +66,17 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
     @Override
     public SWORDEntry ingestDeposit(DepositCollection pDeposit, ServiceDocument pServiceDocument) throws SWORDException {
         // No MD5 check needed here as this is handled by DepositServlet earlier
+        validateDeposit(pDeposit);
         metsDocument = loadMetsXml(pDeposit.getFile());
         SWORDEntry result = super.ingestDeposit(pDeposit, pServiceDocument);
         delete(filesMarkedForRemoval);
         return result;
+    }
+
+    private void validateDeposit(DepositCollection pDeposit) {
+        if (pDeposit.getOnBehalfOf() == null || pDeposit.getOnBehalfOf().isEmpty()) {
+            log.warn("X-On-Behalf-Of header is not set. HTTP request principal will be used as repository object owner ID.");
+        }
     }
 
     /**
@@ -104,6 +111,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
      */
     @Override
     public SWORDEntry updateDeposit(DepositCollection deposit, ServiceDocument serviceDocument) throws SWORDException {
+        validateDeposit(deposit);
         InputStream in = prepInputStreamForDigestCheck(deposit.getFile());
         metsDocument = loadMetsXml(in);
         if (hasMd5(deposit)) {
