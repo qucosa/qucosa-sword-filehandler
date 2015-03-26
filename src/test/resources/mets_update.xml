@@ -17,79 +17,79 @@
 
 <mets:mets xmlns:mets="http://www.loc.gov/METS/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OBJID="qucosa:1"
            xsi:schemaLocation="http://www.loc.gov/METS/ http://www.loc.gov/standards/mets/mets.xsd">
-  <mets:dmdSec ID="DMD_000">
-    <mets:mdWrap MDTYPE="MODS">
-      <mets:xmlData>
-        <!--
-          DIFF:     Removed a lot info tags compared to mets_ok.xml
-          USE CASE: Update if <mets:mdWrap> present
-        -->
-        <mods:mods xmlns:mods="http://www.loc.gov/mods/v3"
-                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                   version="3.5"
-                   xsi:schemaLocation="http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-5.xsd">
-          <mods:titleInfo lang="ger" usage="primary">
-            <mods:title>Qucosa: Quality Content of Saxony</mods:title>
-            <mods:subTitle>Das EFRE-Projekt Sächsischer Dokumentenserver</mods:subTitle>
-          </mods:titleInfo>
-          <mods:abstract lang="ger" type="content">Die sächsischen Hochschulbibliotheken verfügten bisher nur
-            über eigene, auf die jeweilige Einrichtung beschränkte Hochschulschriftenserver. Qucosa, das der
-            kostenlosen Publikation und dauerhaften Archivierung von elektronischen Diplomarbeiten,
-            Dissertationen und anderen Veröffentlichungen dient, eröffnet den sächsischen
-            Hochschulbibliotheken neue Perspektiven und bildet eines der Elemente einer „Digitalen
-            Bibliothek“ in Sachsen. Bereits mehrere sächsische Hochschulen und Forschungsinstitute benutzen
-            Qucosa zur Publizierung der eigenen Forschungsergebnisse. Auch nichtwissenschaftliche,
-            staatliche Einrichtungen werden zukünftig ihre Schriften auf Qucosa im Volltext anbieten.
-          </mods:abstract>
-          <mods:identifier type="urn">urn:nbn:de:bsz:14-qucosa-32992</mods:identifier>
-        </mods:mods>
-      </mets:xmlData>
-    </mets:mdWrap>
-  </mets:dmdSec>
-  <mets:amdSec ID="AMD_000">
-    <mets:rightsMD ID="RIGHTS_000">
-      <mets:mdWrap MDTYPE="OTHER" OTHERMDTYPE="SLUBRIGHTS" MIMETYPE="application/vnd.slub-info+xml">
-        <mets:xmlData>
-          <slub:info xmlns:slub="http://slub-dresden.de/">
-            <slub:submitter>
-              <slub:name>Frau Administrator</slub:name>
-              <slub:contact>mailto:qucosa.admin@slub-dresden.de</slub:contact>
-            </slub:submitter>
-            <slub:project>OpenAire Project Name</slub:project>
-            <slub:client>Mandant</slub:client>
-            <slub:rights>
-              <slub:license valueURI="URI der Lizenz">Lizenzangabe</slub:license>
-              <slub:embargo encoding="iso8601">2014-11-26</slub:embargo>
-              <slub:accessDNB>false</slub:accessDNB>
-              <slub:accessPOD>false</slub:accessPOD>
-            </slub:rights>
-          </slub:info>
-        </mets:xmlData>
-      </mets:mdWrap>
-    </mets:rightsMD>
-  </mets:amdSec>
-  <!--
-    DIFF:     Removed <mets:amdSec> compared to mets_ok.xml
-    USE CASE: NOOP if <mets:amdSec> is not present
-  -->
-  <mets:fileSec>
-    <mets:fileGrp USE="ORIGINAL">
-      <!--
-        DIFF:     Removed <mets:FLocat>, set @USE
-        USE CASE: Replacing ATT-1 datastream
-      -->
-      <mets:file ID="ATT-1" MIMETYPE="application/pdf">
-        <mets:FLocat xmlns:xlin="http://www.w3.org/1999/xlink"
-                     LOCTYPE="URL"
-                     USE="TEMPORARY"
-                     xlin:href="file:/Attachment.pdf"
-                     xlin:title="Attachment"/>
-      </mets:file>
-    </mets:fileGrp>
-  </mets:fileSec>
-  <mets:structMap>
-    <mets:div DMDID="DMD_000" TYPE="article">
-      <mets:fptr FILEID="ATT-1"/>
-    </mets:div>
-  </mets:structMap>
+    <mets:dmdSec ID="DMD_000">
+        <mets:mdWrap MDTYPE="MODS">
+            <mets:xmlData>
+                <!--
+                  DIFF:     Removed a lot info tags compared to mets_ok.xml
+                  USE CASE: Update if <mets:mdWrap> present
+                -->
+                <mods:mods xmlns:mods="http://www.loc.gov/mods/v3"
+                           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                           version="3.5"
+                           xsi:schemaLocation="http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-5.xsd">
+                    <mods:titleInfo lang="ger" usage="primary">
+                        <mods:title>Qucosa: Quality Content of Saxony</mods:title>
+                        <mods:subTitle>Das EFRE-Projekt Sächsischer Dokumentenserver</mods:subTitle>
+                    </mods:titleInfo>
+                    <mods:abstract lang="ger" type="content">Die sächsischen Hochschulbibliotheken verfügten bisher nur
+                        über eigene, auf die jeweilige Einrichtung beschränkte Hochschulschriftenserver. Qucosa, das der
+                        kostenlosen Publikation und dauerhaften Archivierung von elektronischen Diplomarbeiten,
+                        Dissertationen und anderen Veröffentlichungen dient, eröffnet den sächsischen
+                        Hochschulbibliotheken neue Perspektiven und bildet eines der Elemente einer „Digitalen
+                        Bibliothek“ in Sachsen. Bereits mehrere sächsische Hochschulen und Forschungsinstitute benutzen
+                        Qucosa zur Publizierung der eigenen Forschungsergebnisse. Auch nichtwissenschaftliche,
+                        staatliche Einrichtungen werden zukünftig ihre Schriften auf Qucosa im Volltext anbieten.
+                    </mods:abstract>
+                    <mods:identifier type="urn">urn:nbn:de:bsz:14-qucosa-32992</mods:identifier>
+                </mods:mods>
+            </mets:xmlData>
+        </mets:mdWrap>
+    </mets:dmdSec>
+    <mets:amdSec ID="AMD_000">
+        <mets:rightsMD ID="RIGHTS_000">
+            <mets:mdWrap MDTYPE="OTHER" OTHERMDTYPE="SLUBRIGHTS" MIMETYPE="application/vnd.slub-info+xml">
+                <mets:xmlData>
+                    <slub:info xmlns:slub="http://slub-dresden.de/">
+                        <slub:submitter>
+                            <slub:name>Frau Administrator</slub:name>
+                            <slub:contact>mailto:qucosa.admin@slub-dresden.de</slub:contact>
+                        </slub:submitter>
+                        <slub:project>OpenAire Project Name</slub:project>
+                        <slub:client>Mandant</slub:client>
+                        <slub:rights>
+                            <slub:license valueURI="URI der Lizenz">Lizenzangabe</slub:license>
+                            <slub:embargo encoding="iso8601">2014-11-26</slub:embargo>
+                            <slub:accessDNB>false</slub:accessDNB>
+                            <slub:accessPOD>false</slub:accessPOD>
+                        </slub:rights>
+                    </slub:info>
+                </mets:xmlData>
+            </mets:mdWrap>
+        </mets:rightsMD>
+    </mets:amdSec>
+    <!--
+      DIFF:     Removed <mets:amdSec> compared to mets_ok.xml
+      USE CASE: NOOP if <mets:amdSec> is not present
+    -->
+    <mets:fileSec>
+        <mets:fileGrp USE="ORIGINAL">
+            <!--
+              DIFF:     Removed <mets:FLocat>, set @USE
+              USE CASE: Replacing ATT-1 datastream
+            -->
+            <mets:file ID="ATT-1" MIMETYPE="application/pdf">
+                <mets:FLocat xmlns:xlin="http://www.w3.org/1999/xlink"
+                             LOCTYPE="URL"
+                             USE="TEMPORARY"
+                             xlin:href="file:/Attachment.pdf"
+                             xlin:title="Attachment"/>
+            </mets:file>
+        </mets:fileGrp>
+    </mets:fileSec>
+    <mets:structMap>
+        <mets:div DMDID="DMD_000" TYPE="article">
+            <mets:fptr FILEID="ATT-1"/>
+        </mets:div>
+    </mets:structMap>
 </mets:mets>

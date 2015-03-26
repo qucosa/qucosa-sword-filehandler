@@ -128,7 +128,7 @@ public class QucosaMETSFileHandler_UpdateTest extends QucosaMETSFileHandler_Abst
     }
 
     @Test
-    public void datatsreamGetsDeleted() throws Exception {
+    public void datastreamGetsDeleted() throws Exception {
         FileHandler fh = new QucosaMETSFileHandler();
         when(mockFedoraRepository.hasDatastream(eq("test:1"), eq("ATT-1"))).thenReturn(true);
         DepositCollection depositCollection = buildDeposit(METS_FILE_DELETE_DS, "test:1");

@@ -27,7 +27,25 @@
                     <mods:titleInfo lang="eng" usage="primary">
                         <mods:title>Highlights from COMPASS in hadron spectroscopy</mods:title>
                     </mods:titleInfo>
-                    <mods:abstract lang="eng" type="content">Since Quantum Choromdynamics allows for gluon self-coupling, quarks and gluons cannot be observed as free particles, but only their bound states, the hadrons. This so-called confinement phenomenon is responsible for 98% of the mass in the visible universe. The measurement of the hadron excitation spectra therefore gives valuable input for theory and phenomenology to quantitatively understand this phenomenon. One simple model to describe hadrons is the Constituent Quark Model (CQM), which knows two types of hadrons: mesons, consisting of a quark and an antiquark, and baryons, which are made out of three quarks. More advanced models, which are inspired by QCD as well as calculations within Lattice QCD predict the existence of other types of hadrons, which may be e.g. described solely by gluonic excitations (glueballs) or mixed quark and gluon excitations (hybrids). In order to search for such states, the COMPASS experiment at the Super Proton Synchrotron at CERN has collected large data sets, which allow to study the light-quark meson and baryon spectra in unmatched precision. The overview shown here focuses on the light meson sector, presenting a detailed Partial-Wave Analysis of the processes: π−p→π−π+π−p and π−p→π−π0π0p. A new state, the a1(1420) with JPC=1++ is observed. Its Breit-Wigner parameters are found to be in the ranges: m=1412−1422MeV/c2 and Γ=130−150MeV/c2. In the same analysis, a signal in a wave with JPC=1−+ is observed. A resonant origin of this signal would not be explicable within the CQM. In addition to this possibility of an exotic state, a possible non resonant origin of this signal is discussed.
+                    <mods:abstract lang="eng" type="content">Since Quantum Choromdynamics allows for gluon
+                        self-coupling, quarks and gluons cannot be observed as free particles, but only their bound
+                        states, the hadrons. This so-called confinement phenomenon is responsible for 98% of the mass in
+                        the visible universe. The measurement of the hadron excitation spectra therefore gives valuable
+                        input for theory and phenomenology to quantitatively understand this phenomenon. One simple
+                        model to describe hadrons is the Constituent Quark Model (CQM), which knows two types of
+                        hadrons: mesons, consisting of a quark and an antiquark, and baryons, which are made out of
+                        three quarks. More advanced models, which are inspired by QCD as well as calculations within
+                        Lattice QCD predict the existence of other types of hadrons, which may be e.g. described solely
+                        by gluonic excitations (glueballs) or mixed quark and gluon excitations (hybrids). In order to
+                        search for such states, the COMPASS experiment at the Super Proton Synchrotron at CERN has
+                        collected large data sets, which allow to study the light-quark meson and baryon spectra in
+                        unmatched precision. The overview shown here focuses on the light meson sector, presenting a
+                        detailed Partial-Wave Analysis of the processes: π−p→π−π+π−p and π−p→π−π0π0p. A new state, the
+                        a1(1420) with JPC=1++ is observed. Its Breit-Wigner parameters are found to be in the ranges:
+                        m=1412−1422MeV/c2 and Γ=130−150MeV/c2. In the same analysis, a signal in a wave with JPC=1−+ is
+                        observed. A resonant origin of this signal would not be explicable within the CQM. In addition
+                        to this possibility of an exotic state, a possible non resonant origin of this signal is
+                        discussed.
                     </mods:abstract>
                 </mods:mods>
             </mets:xmlData>
