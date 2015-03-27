@@ -48,7 +48,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
     private static final Namespace METS = Namespace.getNamespace("mets", "http://www.loc.gov/METS/");
     private static final Namespace MODS = Namespace.getNamespace("mods", "http://www.loc.gov/mods/v3");
     private static final Namespace XLINK = Namespace.getNamespace("xlink", "http://www.w3.org/1999/xlink");
-    private static final Namespace SLUB = Namespace.getNamespace("slub", "http://slub-dresden.de");
+    private static final Namespace SLUB = Namespace.getNamespace("slub", "http://slub-dresden.de/");
     private static final String DS_ID_SLUBINFO = "SLUB-INFO";
     private static final String DS_ID_SLUBINFO_LABEL = "SLUB Administrative Metadata";
     private static final String DS_ID_QUCOSAXML = "QUCOSA-XML";
@@ -57,8 +57,8 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
     private static final String DS_ID_MODS_LABEL = "Object Bibliographic Metadata";
     private static final Logger log = Logger.getLogger(QucosaMETSFileHandler.class);
     private final Map<String, XPathQuery> queries;
+    private final List<File> filesMarkedForRemoval = new LinkedList<>();
     private Document metsDocument;
-    private List<File> filesMarkedForRemoval = new LinkedList<>();
 
     public QucosaMETSFileHandler() throws JDOMException {
         super("application/vnd.qucosa.mets+xml", "");
@@ -73,12 +73,6 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         SWORDEntry result = super.ingestDeposit(pDeposit, pServiceDocument);
         delete(filesMarkedForRemoval);
         return result;
-    }
-
-    private void validateDeposit(DepositCollection pDeposit) {
-        if (pDeposit.getOnBehalfOf() == null || pDeposit.getOnBehalfOf().isEmpty()) {
-            log.warn("X-On-Behalf-Of header is not set. HTTP request principal will be used as repository object owner ID.");
-        }
     }
 
     /**
@@ -181,6 +175,12 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         return resultList;
     }
 
+    protected void validateDeposit(DepositCollection pDeposit) {
+        if (pDeposit.getOnBehalfOf() == null || pDeposit.getOnBehalfOf().isEmpty()) {
+            log.warn("X-On-Behalf-Of header is not set. HTTP request principal will be used as repository object owner ID.");
+        }
+    }
+
     private <E> void addIfNotNull(List<E> list, E e) {
         if (e != null) list.add(e);
     }
@@ -254,59 +254,56 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         return datastreamList;
     }
 
-    private Datastream getModsDatastream(Document metsDocument) throws SWORDException {
-        Datastream result;
+    private Datastream getModsDatastream(Document metsDocument) {
         try {
-            Element el = queries.get("mods").selectNode(metsDocument);
-            if (el != null) {
-                Document d = new Document((Element) el.clone());
-                result = new XMLInlineDatastream(DS_ID_MODS, d);
-                result.setLabel(DS_ID_MODS_LABEL);
-                result.setMimeType(P_MIME_TYPE);
-            } else {
-                return null;
-            }
-        } catch (JDOMException e) {
+            return getDatastream(metsDocument, "mods", DS_ID_MODS, DS_ID_MODS_LABEL, P_MIME_TYPE);
+        } catch (SWORDException e) {
             log.error(e);
-            throw new SWORDException("Cannot obtain MODS datastream", e);
+            return null;
         }
-        return result;
     }
 
     private Datastream getSlubInfoDatastream(Document metsDocument) {
-        Datastream result = null;
         try {
-            Element el = queries.get("slubrights_mdwrap").selectNode(metsDocument);
-            if (el != null) {
-                Element content = (Element) el.getChild("xmlData", METS).getChildren().get(0);
-                Document d = new Document((Element) content.clone());
-                result = new XMLInlineDatastream(DS_ID_SLUBINFO, d);
-                result.setLabel(DS_ID_SLUBINFO_LABEL);
-                result.setMimeType(el.getAttribute("MIMETYPE").getValue());
-            }
-        } catch (JDOMException e) {
+            return getDatastream(metsDocument, "slubrights_mdwrap", DS_ID_SLUBINFO, DS_ID_SLUBINFO_LABEL);
+        } catch (SWORDException e) {
             log.error(e);
+            return null;
         }
-        return result;
     }
 
     private Datastream getQucosaXmlDatastream(Document metsDocument) {
+        try {
+            return getDatastream(metsDocument, "qucosaxml_mdwrap", DS_ID_QUCOSAXML, DS_ID_QUCOSAXML_LABEL);
+        } catch (SWORDException e) {
+            log.error(e);
+            return null;
+        }
+    }
+
+    private Datastream getDatastream(Document metsDocument, String queryKey, String datastreamID, String datastreamLabel) throws SWORDException {
+        return getDatastream(metsDocument, queryKey, datastreamID, datastreamLabel, null);
+    }
+
+    private Datastream getDatastream(Document metsDocument, String queryKey, String datastreamID, String datastreamLabel, String overrideMimetype) throws SWORDException {
         Datastream result = null;
         try {
-            Element el = queries.get("qucosaxml_mdwrap").selectNode(metsDocument);
+            Element el = queries.get(queryKey).selectNode(metsDocument);
             if (el != null) {
-                Element content = (Element) el.getChild("Opus").getChildren().get(0);
-                Document d = new Document((Element) content.clone());
-                result = new XMLInlineDatastream(DS_ID_QUCOSAXML, d);
-                result.setLabel(DS_ID_QUCOSAXML_LABEL);
-                result.setMimeType(el.getAttribute("MIMETYPE").getValue());
+                Document d = new Document((Element) el.clone());
+                result = new XMLInlineDatastream(datastreamID, d);
+                result.setLabel(datastreamLabel);
+                if (overrideMimetype != null) {
+                    result.setMimeType(overrideMimetype);
+                } else {
+                    result.setMimeType(el.getParentElement().getParentElement().getAttributeValue("MIMETYPE"));
+                }
             }
         } catch (JDOMException e) {
-            log.error(e);
+            throw new SWORDException("Cannot obtain datastream: " + datastreamID, e);
         }
         return result;
     }
-
 
     private boolean hasMd5(DepositCollection deposit) {
         return (deposit.getMd5() != null) && (!deposit.getMd5().isEmpty());
@@ -321,8 +318,8 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
             put("identifiers", new XPathQuery(MODS_PREFIX + "/mods:identifier"));
             put("mods", new XPathQuery(MODS_PREFIX));
             put("primary_title", new XPathQuery(MODS_PREFIX + "/mods:titleInfo[@usage='primary']/mods:title"));
-            put("slubrights_mdwrap", new XPathQuery(METS_AMDSEC_PREFIX + "/mets:mdWrap[@MDTYPE='OTHER' and @OTHERMDTYPE='SLUBRIGHTS']"));
-            put("qucosaxml_mdwrap", new XPathQuery(METS_DMDSEC_PREFIX + "/mets:mdWrap[@MDTYPE='OTHER' and @OTHERMDTYPE='QUCOSA-XML']"));
+            put("slubrights_mdwrap", new XPathQuery(METS_AMDSEC_PREFIX + "/mets:mdWrap[@MDTYPE='OTHER' and @OTHERMDTYPE='SLUBRIGHTS']/mets:xmlData/slub:info"));
+            put("qucosaxml_mdwrap", new XPathQuery(METS_DMDSEC_PREFIX + "/mets:mdWrap[@MDTYPE='OTHER' and @OTHERMDTYPE='QUCOSA-XML']/mets:xmlData/Opus"));
         }};
     }
 

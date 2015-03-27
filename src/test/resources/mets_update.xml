@@ -48,9 +48,11 @@
     </mets:dmdSec>
     <mets:dmdSec ID="DMD_001">
         <mets:mdWrap MDTYPE="OTHER" OTHERMDTYPE="QUCOSA-XML" MIMETYPE="application/xml">
-            <Opus version="2.0">
-                <Opus_Document/>
-            </Opus>
+            <mets:xmlData>
+                <Opus version="2.0">
+                    <Opus_Document/>
+                </Opus>
+            </mets:xmlData>
         </mets:mdWrap>
     </mets:dmdSec>
     <mets:amdSec ID="AMD_000">
