@@ -66,11 +66,37 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
     }
 
     @Override
-    public SWORDEntry ingestDeposit(DepositCollection pDeposit, ServiceDocument pServiceDocument) throws SWORDException {
-        // No MD5 check needed here as this is handled by DepositServlet earlier
-        validateDeposit(pDeposit);
-        metsDocument = loadMetsXml(pDeposit.getFile());
-        SWORDEntry result = super.ingestDeposit(pDeposit, pServiceDocument);
+    public SWORDEntry ingestDeposit(DepositCollection deposit, ServiceDocument serviceDocument) throws SWORDException {
+        validateDeposit(deposit);
+        metsDocument = loadMetsXml(deposit.getFile());
+
+        final FedoraRepository repository = new FedoraRepository(this._props, deposit.getUsername(), deposit.getPassword());
+        repository.connect();
+
+        String pid = obtainPID(deposit, repository);
+
+        List<Datastream> datastreams;
+        try {
+            datastreams = getDatastreams(deposit);
+            ensureValidDSIds(datastreams);
+        } catch (IOException e) {
+            throw new SWORDException("Couldn't access uploaded file", e);
+        }
+
+        final FedoraObject newFedoraObject = new FedoraObject(pid);
+        {
+            newFedoraObject.setIdentifiers(getIdentifiers(deposit));
+            newFedoraObject.setDc(getDublinCore(deposit));
+            newFedoraObject.setRelsext(getRelationships(deposit));
+            newFedoraObject.setDatastreams(datastreams);
+        }
+        validateObject(newFedoraObject);
+
+        if (!deposit.isNoOp()) { // Don't ingest if no op is set
+            repository.ingest(newFedoraObject);
+        }
+
+        SWORDEntry result = getSWORDEntry(deposit, serviceDocument, newFedoraObject);
         delete(filesMarkedForRemoval);
         return result;
     }
@@ -179,6 +205,21 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         if (pDeposit.getOnBehalfOf() == null || pDeposit.getOnBehalfOf().isEmpty()) {
             log.warn("X-On-Behalf-Of header is not set. HTTP request principal will be used as repository object owner ID.");
         }
+    }
+
+    private String obtainPID(DepositCollection deposit, FedoraRepository repository) throws SWORDException {
+        String pid = "noop:nopid";
+        if (isSet(deposit.getSlug())) {
+            pid = deposit.getSlug();
+        } else if (!deposit.isNoOp()) {
+            // Don't mint PID if no op is set
+            pid = repository.mintPid();
+        }
+        return pid;
+    }
+
+    private boolean isSet(String s) {
+        return !emptyIfNull(s).isEmpty();
     }
 
     private <E> void addIfNotNull(List<E> list, E e) {

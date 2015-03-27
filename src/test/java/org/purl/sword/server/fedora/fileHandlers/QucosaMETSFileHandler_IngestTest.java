@@ -212,4 +212,17 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
         assertEquals(Level.WARN, loggingEvent.getLevel());
     }
 
+    @Test
+    public void slugHeaderDeterminesPID() throws Exception {
+        FileHandler fh = new QucosaMETSFileHandler();
+        ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
+        final DepositCollection deposit = buildDeposit(METS_FILE_OK);
+        deposit.setSlug("qucosa:4711");
+
+        fh.ingestDeposit(deposit, buildServiceDocument());
+
+        verify(mockFedoraRepository).ingest(argument.capture());
+        assertEquals("SLUG header should fix PID for ingested object", "qucosa:4711", argument.getValue().getPid());
+    }
+
 }
