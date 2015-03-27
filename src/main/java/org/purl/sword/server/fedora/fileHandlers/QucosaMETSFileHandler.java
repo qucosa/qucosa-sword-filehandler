@@ -51,6 +51,8 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
     private static final Namespace SLUB = Namespace.getNamespace("slub", "http://slub-dresden.de");
     private static final String DS_ID_SLUBINFO = "SLUB-INFO";
     private static final String DS_ID_SLUBINFO_LABEL = "SLUB Administrative Metadata";
+    private static final String DS_ID_QUCOSAXML = "QUCOSA-XML";
+    private static final String DS_ID_QUCOSAXML_LABEL = "Pristine Qucosa XML Metadata";
     private static final String DS_ID_MODS = "MODS";
     private static final String DS_ID_MODS_LABEL = "Object Bibliographic Metadata";
     private static final Logger log = Logger.getLogger(QucosaMETSFileHandler.class);
@@ -126,6 +128,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
             updateIfPresent(repository, pid, getModsDatastream(metsDocument));
             updateAttachmentDatastreams(repository, pid, getFileDatastreams(metsDocument, filesMarkedForRemoval));
             updateOrAdd(repository, pid, getSlubInfoDatastream(metsDocument));
+            updateOrAdd(repository, pid, getQucosaXmlDatastream(metsDocument));
         }
 
         FedoraObject fedoraObj = new FedoraObject(pid);
@@ -172,6 +175,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
     protected List<Datastream> getDatastreams(DepositCollection pDeposit) throws IOException, SWORDException {
         LinkedList<Datastream> resultList = new LinkedList<>();
         addIfNotNull(resultList, getSlubInfoDatastream(metsDocument));
+        addIfNotNull(resultList, getQucosaXmlDatastream(metsDocument));
         addIfNotNull(resultList, getModsDatastream(metsDocument));
         addIfNotNull(resultList, getFileDatastreams(metsDocument, filesMarkedForRemoval));
         return resultList;
@@ -286,12 +290,31 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         return result;
     }
 
+    private Datastream getQucosaXmlDatastream(Document metsDocument) {
+        Datastream result = null;
+        try {
+            Element el = queries.get("qucosaxml_mdwrap").selectNode(metsDocument);
+            if (el != null) {
+                Element content = (Element) el.getChild("Opus").getChildren().get(0);
+                Document d = new Document((Element) content.clone());
+                result = new XMLInlineDatastream(DS_ID_QUCOSAXML, d);
+                result.setLabel(DS_ID_QUCOSAXML_LABEL);
+                result.setMimeType(el.getAttribute("MIMETYPE").getValue());
+            }
+        } catch (JDOMException e) {
+            log.error(e);
+        }
+        return result;
+    }
+
+
     private boolean hasMd5(DepositCollection deposit) {
         return (deposit.getMd5() != null) && (!deposit.getMd5().isEmpty());
     }
 
     private Map<String, XPathQuery> initializeXPathQueries() throws JDOMException {
-        final String MODS_PREFIX = "/mets:mets/mets:dmdSec/mets:mdWrap[@MDTYPE='MODS']/mets:xmlData/mods:mods";
+        final String METS_DMDSEC_PREFIX = "/mets:mets/mets:dmdSec";
+        final String MODS_PREFIX = METS_DMDSEC_PREFIX + "/mets:mdWrap[@MDTYPE='MODS']/mets:xmlData/mods:mods";
         final String METS_AMDSEC_PREFIX = "/mets:mets/mets:amdSec/mets:rightsMD";
         return new HashMap<String, XPathQuery>() {{
             put("files", new XPathQuery("/mets:mets/mets:fileSec/mets:fileGrp[@USE='ORIGINAL']/mets:file"));
@@ -299,6 +322,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
             put("mods", new XPathQuery(MODS_PREFIX));
             put("primary_title", new XPathQuery(MODS_PREFIX + "/mods:titleInfo[@usage='primary']/mods:title"));
             put("slubrights_mdwrap", new XPathQuery(METS_AMDSEC_PREFIX + "/mets:mdWrap[@MDTYPE='OTHER' and @OTHERMDTYPE='SLUBRIGHTS']"));
+            put("qucosaxml_mdwrap", new XPathQuery(METS_DMDSEC_PREFIX + "/mets:mdWrap[@MDTYPE='OTHER' and @OTHERMDTYPE='QUCOSA-XML']"));
         }};
     }
 

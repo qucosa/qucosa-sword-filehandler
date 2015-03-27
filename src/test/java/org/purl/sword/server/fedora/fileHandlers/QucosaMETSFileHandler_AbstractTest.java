@@ -67,7 +67,7 @@ abstract class QucosaMETSFileHandler_AbstractTest {
     public static final String METS_FILE_ADD_DS = "/mets_add_ds.xml";
     public static final String METS_FILE_DELETE_DS = "/mets_delete_ds.xml";
     public static final String METS_FILE_UPDATE = "/mets_update.xml";
-    public static final String METS_FILE_UPDATE_MD5 = "34e9ee988994bef7da2793f87b675524";
+    public static final String METS_FILE_UPDATE_MD5 = "a7e176ec8c6f0d2fa875edc664639ce5";
 
     protected FedoraRepository mockFedoraRepository;
     protected Appender mockAppender;

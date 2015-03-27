@@ -111,6 +111,22 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
     }
 
     @Test
+    public void hasProperQucosaXmlDatastream() throws Exception {
+        FileHandler fh = new QucosaMETSFileHandler();
+        ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
+
+        fh.ingestDeposit(buildDeposit(METS_FILE_OK), buildServiceDocument());
+
+        verify(mockFedoraRepository).ingest(argument.capture());
+        Datastream ds = getDatastream("QUCOSA-XML", argument.getValue());
+        assertNotNull("Should have datastream", ds);
+        assertEquals("Should have XML mimetype", "application/xml", ds.getMimeType());
+        assertEquals("Should be active", State.ACTIVE, ds.getState());
+        assertEquals("Should be versionable", true, ds.isVersionable());
+        assertEquals("Should have proper label", "Pristine Qucosa XML Metadata", ds.getLabel());
+    }
+
+    @Test
     public void hasProperFileDatastream() throws Exception {
         FileHandler fh = new QucosaMETSFileHandler();
         ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);

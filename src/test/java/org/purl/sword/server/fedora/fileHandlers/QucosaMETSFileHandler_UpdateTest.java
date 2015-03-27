@@ -28,8 +28,7 @@ import org.purl.sword.server.fedora.fedoraObjects.State;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class QucosaMETSFileHandler_UpdateTest extends QucosaMETSFileHandler_AbstractTest {
 
@@ -92,7 +91,31 @@ public class QucosaMETSFileHandler_UpdateTest extends QucosaMETSFileHandler_Abst
 
         fh.updateDeposit(depositCollection, buildServiceDocument());
 
-        verify(mockFedoraRepository).addDatastream(eq("test:1"), argument.capture(), anyString());
+        verify(mockFedoraRepository, atLeastOnce()).addDatastream(eq("test:1"), argument.capture(), anyString());
+    }
+
+    @Test
+    public void qucosaXmlGetsUpdated() throws Exception {
+        FileHandler fh = new QucosaMETSFileHandler();
+        when(mockFedoraRepository.hasDatastream(eq("test:1"), eq("QUCOSA-XML"))).thenReturn(true);
+        ArgumentCaptor<Datastream> argument = ArgumentCaptor.forClass(Datastream.class);
+        DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE, "test:1");
+
+        fh.updateDeposit(depositCollection, buildServiceDocument());
+
+        verify(mockFedoraRepository).modifyDatastream(eq("test:1"), argument.capture(), anyString());
+    }
+
+    @Test
+    public void qucosaXmlGetsAdded() throws Exception {
+        FileHandler fh = new QucosaMETSFileHandler();
+        when(mockFedoraRepository.hasDatastream(eq("test:1"), eq("QUCOSA-XML"))).thenReturn(true);
+        ArgumentCaptor<Datastream> argument = ArgumentCaptor.forClass(Datastream.class);
+        DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE, "test:1");
+
+        fh.updateDeposit(depositCollection, buildServiceDocument());
+
+        verify(mockFedoraRepository, atLeastOnce()).addDatastream(eq("test:1"), argument.capture(), anyString());
     }
 
     @Test
