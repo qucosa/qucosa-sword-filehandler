@@ -288,6 +288,13 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
                     final String mimetype = validateAndReturn("mime type", e.getAttributeValue("MIMETYPE"));
                     Datastream ds = buildDatastream(id, fLocat, href, mimetype, isFile);
 
+                    String digestType = emptyIfNull(e.getAttributeValue("CHECKSUMTYPE"));
+                    String digest = emptyIfNull(e.getAttributeValue("CHECKSUM"));
+                    if (!(digestType.isEmpty() || digest.isEmpty())) {
+                        ds.setDigestType(digestType);
+                        ds.setDigest(digest);
+                    }
+
                     datastreamList.add(ds);
                 }
             }

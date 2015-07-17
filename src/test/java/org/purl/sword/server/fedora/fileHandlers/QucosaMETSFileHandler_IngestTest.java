@@ -225,4 +225,19 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
         assertEquals("SLUG header should fix PID for ingested object", "qucosa:4711", argument.getValue().getPid());
     }
 
+    @Test
+    public void includesChecksum() throws Exception {
+        FileHandler fh = new QucosaMETSFileHandler();
+        ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
+        final DepositCollection deposit = buildDeposit(METS_FILE_CHECKSUM);
+
+        fh.ingestDeposit(deposit, buildServiceDocument());
+
+        verify(mockFedoraRepository).ingest(argument.capture());
+        Datastream ds = getDatastream("ATT-1", argument.getValue());
+        assertNotNull("Should have datastream", ds);
+        assertNotNull("Should have checksum", ds.getDigest());
+        assertEquals("Should have checksum type", "SHA-512", ds.getDigestType());
+    }
+
 }

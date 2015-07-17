@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2015 Saxon State and University Library Dresden (SLUB)
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<mets:mets xmlns:mets="http://www.loc.gov/METS/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OBJID="qucosa:1"
+           xsi:schemaLocation="http://www.loc.gov/METS/ http://www.loc.gov/standards/mets/mets.xsd">
+    <mets:dmdSec ID="DMD_000">
+        <mets:mdWrap MDTYPE="MODS">
+            <mets:xmlData>
+                <mods:mods xmlns:mods="http://www.loc.gov/mods/v3"
+                           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                           version="3.5"
+                           xsi:schemaLocation="http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-5.xsd">
+                    <mods:titleInfo>
+                        <mods:title>METS File Checksum Test</mods:title>
+                    </mods:titleInfo>
+                </mods:mods>
+            </mets:xmlData>
+        </mets:mdWrap>
+    </mets:dmdSec>
+    <mets:fileSec>
+        <mets:fileGrp USE="ORIGINAL">
+            <mets:file ID="ATT-1" MIMETYPE="application/pdf"
+                       CHECKSUM="9510c93637f6baafbb9082a802aa6c3d1167f4cf6a02c432131de3a6f98d39cd3cac5f26d7b472e8fc2a50930a4e1ca89e8d9e839c81ef201198678aac3df45a"
+                       CHECKSUMTYPE="SHA-512">
+                <mets:FLocat xmlns:xlin="http://www.w3.org/1999/xlink"
+                             LOCTYPE="URL"
+                             xlin:href="file:/Attachment.pdf"
+                             xlin:title="Attachment"/>
+            </mets:file>
+        </mets:fileGrp>
+    </mets:fileSec>
+    <mets:structMap>
+        <mets:div DMDID="DMD_000" TYPE="article">
+            <mets:fptr FILEID="ATT-1"/>
+        </mets:div>
+    </mets:structMap>
+</mets:mets>
