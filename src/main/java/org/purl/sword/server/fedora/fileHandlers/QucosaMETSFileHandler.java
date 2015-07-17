@@ -42,6 +42,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import static org.purl.sword.server.fedora.fedoraObjects.State.DELETED;
+import static org.purl.sword.server.fedora.fedoraObjects.State.INACTIVE;
+
 public class QucosaMETSFileHandler extends DefaultFileHandler {
 
     private static final String P_MIME_TYPE = "application/mods+xml";
@@ -315,7 +318,11 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
 
     private Datastream getQucosaXmlDatastream(Document metsDocument) {
         try {
-            return getDatastream(metsDocument, "qucosaxml_mdwrap", DS_ID_QUCOSAXML, DS_ID_QUCOSAXML_LABEL);
+            final Datastream datastream = getDatastream(metsDocument, "qucosaxml_mdwrap", DS_ID_QUCOSAXML, DS_ID_QUCOSAXML_LABEL);
+            if (datastream != null) {
+                datastream.setState(INACTIVE);
+            }
+            return datastream;
         } catch (SWORDException e) {
             log.error(e);
             return null;
@@ -404,7 +411,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         for (Datastream attDatastream : datastreams) {
             if (attDatastream instanceof VoidDatastream) {
                 if (repository.hasDatastream(pid, attDatastream.getId())) {
-                    repository.setDatastreamState(pid, attDatastream.getId(), State.DELETED, null);
+                    repository.setDatastreamState(pid, attDatastream.getId(), DELETED, null);
                 }
             } else {
                 if (repository.hasDatastream(pid, attDatastream.getId())) {

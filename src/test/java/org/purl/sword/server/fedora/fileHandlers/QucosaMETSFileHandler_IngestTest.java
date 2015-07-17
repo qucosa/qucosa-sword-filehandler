@@ -121,7 +121,7 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
         Datastream ds = getDatastream("QUCOSA-XML", argument.getValue());
         assertNotNull("Should have datastream", ds);
         assertEquals("Should have XML mimetype", "application/xml", ds.getMimeType());
-        assertEquals("Should be active", State.ACTIVE, ds.getState());
+        assertEquals("Should be inactive", State.INACTIVE, ds.getState());
         assertEquals("Should be versionable", true, ds.isVersionable());
         assertEquals("Should have proper label", "Pristine Qucosa XML Metadata", ds.getLabel());
     }
