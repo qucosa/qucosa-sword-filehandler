@@ -59,8 +59,8 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
     private static final String DS_ID_MODS = "MODS";
     private static final String DS_ID_MODS_LABEL = "Object Bibliographic Metadata";
     private static final Logger log = Logger.getLogger(QucosaMETSFileHandler.class);
-    private final Map<String, XPathQuery> queries;
     private final List<File> filesMarkedForRemoval = new LinkedList<>();
+    private final Map<String, XPathQuery> queries;
     private Document metsDocument;
 
     public QucosaMETSFileHandler() throws JDOMException {
@@ -264,27 +264,12 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         List<Datastream> datastreamList = new LinkedList<>();
         try {
             for (Element e : queries.get("files").selectNodes(metsDocument)) {
-                final String id = validateAndSet("file ID", e.getAttributeValue("ID"));
-                if (e.getAttributeValue("USE") != null && e.getAttributeValue("USE").equals("DELETE")) {
+                final String id = validateAndReturn("file ID", e.getAttributeValue("ID"));
+
+                if (isADeleteRequest(e)) {
                     datastreamList.add(new VoidDatastream(id));
                 } else {
-                    final String mimetype = validateAndSet("mime type", e.getAttributeValue("MIMETYPE"));
-                    final Element fLocat = validateAndSet("FLocat element", e.getChild("FLocat", METS));
-                    final String href = validateAndSet("file content URL", fLocat.getAttributeValue("href", XLINK));
-                    final URI uri = new URI(href);
-
-                    Datastream ds;
-                    if (uri.getScheme().equals("file")) {
-                        LocalDatastream lds = new LocalDatastream(id, mimetype, href);
-                        lds.setCleanup(false); // no automatic cleanup
-                        markTemporaryFileForDeletion(filesMarkedForRemoval, uri,
-                                emptyIfNull(fLocat.getAttributeValue("USE")).equals("TEMPORARY"));
-                        ds = lds;
-                    } else {
-                        ds = new ManagedDatastream(id, mimetype, href);
-                    }
-
-                    ds.setLabel(fLocat.getAttributeValue("title", XLINK));
+                    Datastream ds = buildDatastreamAndMarkLocalFiles(filesMarkedForRemoval, e, id);
                     datastreamList.add(ds);
                 }
             }
@@ -296,6 +281,35 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
             throw new SWORDException("Invalid URL", e);
         }
         return datastreamList;
+    }
+
+    private Datastream buildDatastreamAndMarkLocalFiles(List<File> filesMarkedForRemoval, Element e, String id) throws SWORDException, URISyntaxException {
+        final Element fLocat = validateAndReturn("FLocat element", e.getChild("FLocat", METS));
+        final String href = validateAndReturn("file content URL", fLocat.getAttributeValue("href", XLINK));
+        final String mimetype = validateAndReturn("mime type", e.getAttributeValue("MIMETYPE"));
+        final URI uri = new URI(href);
+
+        final boolean isFile = uri.getScheme().equals("file");
+        final boolean isTemporary = emptyIfNull(fLocat.getAttributeValue("USE")).equals("TEMPORARY");
+        if (isFile && isTemporary) {
+            markFileForDeletion(filesMarkedForRemoval, uri);
+        }
+
+        Datastream ds;
+        if (isFile) {
+            LocalDatastream lds = new LocalDatastream(id, mimetype, href);
+            lds.setCleanup(false); // no automatic cleanup
+            ds = lds;
+        } else {
+            ds = new ManagedDatastream(id, mimetype, href);
+        }
+
+        ds.setLabel(fLocat.getAttributeValue("title", XLINK));
+        return ds;
+    }
+
+    private boolean isADeleteRequest(Element e) {
+        return e.getAttributeValue("USE") != null && e.getAttributeValue("USE").equals("DELETE");
     }
 
     private Datastream getModsDatastream(Document metsDocument) {
@@ -386,14 +400,11 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         }
     }
 
-    private void markTemporaryFileForDeletion(List<File> filesMarkedForRemoval, URI uri, boolean b) {
-        if (b) {
-            // mark temporary file for deletion
-            try {
-                filesMarkedForRemoval.add(new File(uri));
-            } catch (Exception ex) {
-                log.warn("Cannot mark file for deletion: " + ex.getMessage());
-            }
+    private void markFileForDeletion(List<File> filesMarkedForRemoval, URI uri) {
+        try {
+            filesMarkedForRemoval.add(new File(uri));
+        } catch (Exception ex) {
+            log.warn("Cannot mark file for deletion: " + ex.getMessage());
         }
     }
 
@@ -441,7 +452,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         }
     }
 
-    private <E> E validateAndSet(String description, E value) throws SWORDException {
+    private <E> E validateAndReturn(String description, E value) throws SWORDException {
         if (value != null) {
             return value;
         } else {
