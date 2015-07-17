@@ -95,12 +95,13 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         }
         validateObject(newFedoraObject);
 
-        if (!deposit.isNoOp()) { // Don't ingest if no op is set
+        if (!deposit.isNoOp()) { // Don't ingest if no-op is set
             repository.ingest(newFedoraObject);
+            delete(filesMarkedForRemoval);
         }
 
         SWORDEntry result = getSWORDEntry(deposit, serviceDocument, newFedoraObject);
-        delete(filesMarkedForRemoval);
+
         return result;
     }
 
@@ -235,17 +236,22 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
 
     private void assertMd5(InputStream in, String md5) throws SWORDException {
         if (in instanceof DigestInputStream) {
-            StringBuilder sb = new StringBuilder();
-            for (byte b : ((DigestInputStream) in).getMessageDigest().digest()) {
-                sb.append(String.format("%02x", b));
-            }
-            String digest = sb.toString();
+            final byte[] md5digest = ((DigestInputStream) in).getMessageDigest().digest();
+            String digest = digestToString(md5digest);
 
             if (!digest.equals(md5)) {
                 log.warn("Bad MD5 for submitted content: " + digest + ". Expected: " + md5);
                 throw new SWORDException("The received MD5 checksum for the deposited file did not match the checksum sent by the deposit client");
             }
         }
+    }
+
+    private String digestToString(byte[] digest) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : digest) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
     }
 
     private void delete(List<File> files) {
@@ -269,7 +275,19 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
                 if (isADeleteRequest(e)) {
                     datastreamList.add(new VoidDatastream(id));
                 } else {
-                    Datastream ds = buildDatastreamAndMarkLocalFiles(filesMarkedForRemoval, e, id);
+                    final Element fLocat = validateAndReturn("FLocat element", e.getChild("FLocat", METS));
+                    final String href = validateAndReturn("file content URL", fLocat.getAttributeValue("href", XLINK));
+                    final URI uri = new URI(href);
+                    final boolean isFile = uri.getScheme().equals("file");
+                    final boolean isTemporary = emptyIfNull(fLocat.getAttributeValue("USE")).equals("TEMPORARY");
+
+                    if (isFile && isTemporary) {
+                        markFileForDeletion(filesMarkedForRemoval, uri);
+                    }
+
+                    final String mimetype = validateAndReturn("mime type", e.getAttributeValue("MIMETYPE"));
+                    Datastream ds = buildDatastream(id, fLocat, href, mimetype, isFile);
+
                     datastreamList.add(ds);
                 }
             }
@@ -283,29 +301,17 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         return datastreamList;
     }
 
-    private Datastream buildDatastreamAndMarkLocalFiles(List<File> filesMarkedForRemoval, Element e, String id) throws SWORDException, URISyntaxException {
-        final Element fLocat = validateAndReturn("FLocat element", e.getChild("FLocat", METS));
-        final String href = validateAndReturn("file content URL", fLocat.getAttributeValue("href", XLINK));
-        final String mimetype = validateAndReturn("mime type", e.getAttributeValue("MIMETYPE"));
-        final URI uri = new URI(href);
-
-        final boolean isFile = uri.getScheme().equals("file");
-        final boolean isTemporary = emptyIfNull(fLocat.getAttributeValue("USE")).equals("TEMPORARY");
-        if (isFile && isTemporary) {
-            markFileForDeletion(filesMarkedForRemoval, uri);
-        }
-
-        Datastream ds;
+    private Datastream buildDatastream(String id, Element fLocat, String href, String mimetype, boolean isFile) {
+        Datastream datastream;
         if (isFile) {
             LocalDatastream lds = new LocalDatastream(id, mimetype, href);
             lds.setCleanup(false); // no automatic cleanup
-            ds = lds;
+            datastream = lds;
         } else {
-            ds = new ManagedDatastream(id, mimetype, href);
+            datastream = new ManagedDatastream(id, mimetype, href);
         }
-
-        ds.setLabel(fLocat.getAttributeValue("title", XLINK));
-        return ds;
+        datastream.setLabel(fLocat.getAttributeValue("title", XLINK));
+        return datastream;
     }
 
     private boolean isADeleteRequest(Element e) {
