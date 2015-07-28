@@ -373,6 +373,8 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
                 } else {
                     result.setMimeType(el.getParentElement().getParentElement().getAttributeValue("MIMETYPE"));
                 }
+                String versioning = System.getProperty("datastream.versioning", "false");
+                result.setVersionable(Boolean.parseBoolean(versioning));
             }
         } catch (JDOMException e) {
             throw new SWORDException("Cannot obtain datastream: " + datastreamID, e);

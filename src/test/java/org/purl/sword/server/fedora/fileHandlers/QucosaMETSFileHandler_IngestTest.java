@@ -82,6 +82,7 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
     public void hasProperSlubInfoDatastream() throws Exception {
         FileHandler fh = new QucosaMETSFileHandler();
         ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
+        System.setProperty("datastream.versioning", "true");
 
         fh.ingestDeposit(buildDeposit(METS_FILE_OK), buildServiceDocument());
 
@@ -98,6 +99,7 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
     public void hasProperModsDatastream() throws Exception {
         FileHandler fh = new QucosaMETSFileHandler();
         ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
+        System.setProperty("datastream.versioning", "true");
 
         fh.ingestDeposit(buildDeposit(METS_FILE_OK), buildServiceDocument());
 
@@ -114,6 +116,7 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
     public void hasProperQucosaXmlDatastream() throws Exception {
         FileHandler fh = new QucosaMETSFileHandler();
         ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
+        System.setProperty("datastream.versioning", "true");
 
         fh.ingestDeposit(buildDeposit(METS_FILE_OK), buildServiceDocument());
 
