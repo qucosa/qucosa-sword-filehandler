@@ -394,7 +394,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
             put("files", new XPathQuery("/mets:mets/mets:fileSec/mets:fileGrp[@USE='ORIGINAL']/mets:file"));
             put("identifiers", new XPathQuery(MODS_PREFIX + "/mods:identifier"));
             put("mods", new XPathQuery(MODS_PREFIX));
-            put("primary_title", new XPathQuery(MODS_PREFIX + "/mods:titleInfo[@usage='primary']/mods:title"));
+            put("primary_title", new XPathQuery(MODS_PREFIX + "/mods:titleInfo/mods:title[1]"));
             put("slubrights_mdwrap", new XPathQuery(METS_AMDSEC_PREFIX + "/mets:mdWrap[@MDTYPE='OTHER' and @OTHERMDTYPE='SLUBRIGHTS']/mets:xmlData/slub:info"));
             put("qucosaxml_mdwrap", new XPathQuery(METS_DMDSEC_PREFIX + "/mets:mdWrap[@MDTYPE='OTHER' and @OTHERMDTYPE='QUCOSA-XML']/mets:xmlData/Opus"));
         }};
