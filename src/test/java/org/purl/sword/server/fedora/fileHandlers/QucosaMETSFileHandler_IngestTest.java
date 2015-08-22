@@ -18,6 +18,9 @@ package org.purl.sword.server.fedora.fileHandlers;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.spi.LoggingEvent;
+import org.jdom.Attribute;
+import org.jdom.Element;
+import org.jdom.Namespace;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.purl.sword.base.SWORDEntry;
@@ -26,6 +29,7 @@ import org.purl.sword.server.fedora.baseExtensions.DepositCollection;
 import org.purl.sword.server.fedora.fedoraObjects.*;
 
 import java.io.File;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
@@ -241,6 +245,42 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
         assertNotNull("Should have datastream", ds);
         assertNotNull("Should have checksum", ds.getDigest());
         assertEquals("Should have checksum type", "SHA-512", ds.getDigestType());
+    }
+
+    @Test
+    public void isMemberOfCollectionAfterIngest() throws Exception {
+        FileHandler fh = new QucosaMETSFileHandler();
+        ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
+        final DepositCollection deposit = buildDeposit(METS_FILE_OK);
+
+        fh.ingestDeposit(deposit, buildServiceDocument());
+
+        verify(mockFedoraRepository).ingest(argument.capture());
+        FedoraObject fo = argument.getValue();
+        RelationshipInspector relationship = new RelationshipInspector(fo.getRelsext());
+
+        assertNotNull("Should have defined relationships", relationship);
+        assertIsMember("Should have collection membership to: " + COLLECTION,
+                "info:fedora/" + COLLECTION,
+                relationship.getElements());
+    }
+
+    private void assertIsMember(String message, String collectionPid, List<Element> elements) {
+        boolean found = false;
+        final Namespace ns_rdf = Namespace.getNamespace("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
+        for (Element e : elements) {
+            if (e.getName().equals("isMemberOf")) {
+                Attribute attr = e.getAttribute("resource", ns_rdf);
+                String val = attr.getValue();
+                if (val != null && val.equals(collectionPid)) {
+                    found = true;
+                    break;
+                }
+            }
+        }
+        if (!found) {
+            fail(message);
+        }
     }
 
 }

@@ -41,7 +41,7 @@
         <noOp>true</noOp>
         <verbose>true</verbose>
         <workspace title="Fedora SWORD Workspace">
-            <collection collection_pid="collection:open" mediation="true" mediationSet="true">
+            <collection collection_pid="collection:test" mediation="true" mediationSet="true">
                 <deposit_url>http://localhost:8080/sword/##COLLECTION_PID##</deposit_url>
                 <users/>
                 <title>Open Collection</title>

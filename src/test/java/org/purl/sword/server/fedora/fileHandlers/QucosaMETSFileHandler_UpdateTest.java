@@ -171,7 +171,7 @@ public class QucosaMETSFileHandler_UpdateTest extends QucosaMETSFileHandler_Abst
         SWORDEntry swordEntry = fh.updateDeposit(depositCollection, buildServiceDocument());
 
         Link link = swordEntry.getLinks().next();
-        assertEquals("http://localhost:8080/sword/collection:open/test:1", link.getHref());
+        assertEquals("http://localhost:8080/sword/" + COLLECTION +"/test:1", link.getHref());
         assertEquals("edit", link.getRel());
     }
 

@@ -57,7 +57,7 @@ import static org.powermock.api.support.membermodification.MemberMatcher.method;
 abstract class QucosaMETSFileHandler_AbstractTest {
 
     public static final String MEDIA_TYPE = "application/vnd.qucosa.mets+xml";
-    public static final String COLLECTION = "collection:open";
+    public static final String COLLECTION = "collection:test";
     public static final String USERNAME = "fedoraAdmin";
     public static final String SUBMITTER = "qucosa";
     public static final String METS_FILE_OK = "/mets_ok.xml";

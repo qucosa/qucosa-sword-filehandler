@@ -59,6 +59,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
     private static final String DS_ID_MODS = "MODS";
     private static final String DS_ID_MODS_LABEL = "Object Bibliographic Metadata";
     private static final Logger log = Logger.getLogger(QucosaMETSFileHandler.class);
+    private static final String DEFAULT_COLLECTION_PID = "qucosa:all";
     private final List<File> filesMarkedForRemoval = new LinkedList<>();
     private final Map<String, XPathQuery> queries;
     private Document metsDocument;
@@ -189,8 +190,12 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
 
     @Override
     protected Relationship getRelationships(DepositCollection pDeposit) {
+        String collectionPid = pDeposit.getCollectionPid();
+        if (collectionPid == null || collectionPid.isEmpty()) {
+            collectionPid = DEFAULT_COLLECTION_PID;
+        }
         Relationship rels = super.getRelationships(pDeposit);
-        rels.add("isMemberOf", "info:fedora/qucosa:all");
+        rels.add("isMemberOf", "info:fedora/" + collectionPid);
         rels.addModel("info:fedora/qucosa:CModel");
         return rels;
     }
