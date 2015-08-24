@@ -21,7 +21,6 @@ import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jdom.input.SAXBuilder;
-import org.jdom.xpath.XPath;
 import org.purl.sword.base.SWORDEntry;
 import org.purl.sword.base.SWORDException;
 import org.purl.sword.base.ServiceDocument;
@@ -36,10 +35,8 @@ import java.net.URISyntaxException;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import static org.purl.sword.server.fedora.fedoraObjects.State.DELETED;
 import static org.purl.sword.server.fedora.fedoraObjects.State.INACTIVE;
@@ -62,14 +59,13 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
 
     private final List<File> filesMarkedForRemoval = new LinkedList<>();
 
-    private final Map<String, XPathQuery> queries;
-
-
     private Document metsDocument;
+
+    private static XPathQueryMap queries;
 
     public QucosaMETSFileHandler() throws JDOMException {
         super("application/vnd.qucosa.mets+xml", "");
-        queries = initializeXPathQueries();
+        queries = new XPathQueryMap();
     }
 
     @Override
@@ -394,20 +390,6 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         return (deposit.getMd5() != null) && (!deposit.getMd5().isEmpty());
     }
 
-    private Map<String, XPathQuery> initializeXPathQueries() throws JDOMException {
-        final String METS_DMDSEC_PREFIX = "/mets:mets/mets:dmdSec";
-        final String MODS_PREFIX = METS_DMDSEC_PREFIX + "/mets:mdWrap[@MDTYPE='MODS']/mets:xmlData/mods:mods";
-        final String METS_AMDSEC_PREFIX = "/mets:mets/mets:amdSec/mets:rightsMD";
-        return new HashMap<String, XPathQuery>() {{
-            put("files", new XPathQuery("/mets:mets/mets:fileSec/mets:fileGrp[@USE='ORIGINAL']/mets:file"));
-            put("identifiers", new XPathQuery(MODS_PREFIX + "/mods:identifier"));
-            put("mods", new XPathQuery(MODS_PREFIX));
-            put("primary_title", new XPathQuery(MODS_PREFIX + "/mods:titleInfo/mods:title[1]"));
-            put("slubrights_mdwrap", new XPathQuery(METS_AMDSEC_PREFIX + "/mets:mdWrap[@MDTYPE='OTHER' and @OTHERMDTYPE='SLUBRIGHTS']/mets:xmlData/slub:info"));
-            put("qucosaxml_mdwrap", new XPathQuery(METS_DMDSEC_PREFIX + "/mets:mdWrap[@MDTYPE='OTHER' and @OTHERMDTYPE='QUCOSA-XML']/mets:xmlData/Opus"));
-        }};
-    }
-
     private Document loadMetsXml(InputStream in) throws SWORDException {
         try {
             return new SAXBuilder().build(in);
@@ -483,43 +465,4 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         }
     }
 
-    private class XPathQuery {
-        private final XPath xpath;
-
-        public XPathQuery(String xp) throws JDOMException {
-            xpath = XPath.newInstance(xp);
-            xpath.addNamespace(Namespaces.METS);
-            xpath.addNamespace(Namespaces.MODS);
-            xpath.addNamespace(Namespaces.XLINK);
-            xpath.addNamespace(Namespaces.SLUB);
-        }
-
-        public String selectValue(Document doc) throws JDOMException {
-            Element el = selectNode(doc);
-            if (el != null) {
-                return el.getTextTrim();
-            } else {
-                return null;
-            }
-        }
-
-        public List<String> selectValues(Document doc) throws JDOMException {
-            final List<Element> els = selectNodes(doc);
-            return new LinkedList<String>() {{
-                for (Element e : els) add(e.getTextTrim());
-            }};
-        }
-
-        public Element selectNode(Document doc) throws JDOMException {
-            return (Element) xpath.selectSingleNode(doc);
-        }
-
-        public List<Element> selectNodes(Document doc) throws JDOMException {
-            LinkedList<Element> resultList = new LinkedList<>();
-            for (Object o : xpath.selectNodes(doc)) {
-                resultList.add((Element) o);
-            }
-            return resultList;
-        }
-    }
 }
