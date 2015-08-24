@@ -17,10 +17,7 @@
 package org.purl.sword.server.fedora.fileHandlers;
 
 import org.apache.log4j.Logger;
-import org.jdom.Document;
-import org.jdom.Element;
 import org.jdom.JDOMException;
-import org.jdom.input.SAXBuilder;
 import org.purl.sword.base.SWORDEntry;
 import org.purl.sword.base.SWORDException;
 import org.purl.sword.base.ServiceDocument;
@@ -29,17 +26,11 @@ import org.purl.sword.server.fedora.fedoraObjects.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.security.DigestInputStream;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.LinkedList;
 import java.util.List;
 
 import static org.purl.sword.server.fedora.fedoraObjects.State.DELETED;
-import static org.purl.sword.server.fedora.fedoraObjects.State.INACTIVE;
 
 public class QucosaMETSFileHandler extends DefaultFileHandler {
 
@@ -47,31 +38,19 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
 
     private static final String DEFAULT_COLLECTION_PID = "qucosa:all";
 
-    private static final String DS_ID_SLUBINFO = "SLUB-INFO";
-    private static final String DS_ID_SLUBINFO_LABEL = "SLUB Administrative Metadata";
-
-    private static final String DS_ID_QUCOSAXML = "QUCOSA-XML";
-    private static final String DS_ID_QUCOSAXML_LABEL = "Pristine Qucosa XML Metadata";
-
-    private static final String DS_MODS_MIME_TYPE = "application/mods+xml";
-    private static final String DS_ID_MODS = "MODS";
-    private static final String DS_ID_MODS_LABEL = "Object Bibliographic Metadata";
-
     private final List<File> filesMarkedForRemoval = new LinkedList<>();
 
-    private Document metsDocument;
-
-    private static XPathQueryMap queries;
+    private METS _mets;
 
     public QucosaMETSFileHandler() throws JDOMException {
         super("application/vnd.qucosa.mets+xml", "");
-        queries = new XPathQueryMap();
     }
 
     @Override
     public SWORDEntry ingestDeposit(DepositCollection deposit, ServiceDocument serviceDocument) throws SWORDException {
         validateDeposit(deposit);
-        metsDocument = loadMetsXml(deposit.getFile());
+        _mets = loadMets(deposit);
+        assertChecksum(deposit, _mets);
 
         final FedoraRepository repository = new FedoraRepository(this._props, deposit.getUsername(), deposit.getPassword());
         repository.connect();
@@ -103,6 +82,10 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         SWORDEntry result = getSWORDEntry(deposit, serviceDocument, newFedoraObject);
 
         return result;
+    }
+
+    private SWORDException swordException(String message, Exception e) {
+        return new SWORDException(message, e);
     }
 
     /**
@@ -138,21 +121,19 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
     @Override
     public SWORDEntry updateDeposit(DepositCollection deposit, ServiceDocument serviceDocument) throws SWORDException {
         validateDeposit(deposit);
-        InputStream in = prepInputStreamForDigestCheck(deposit.getFile());
-        metsDocument = loadMetsXml(in);
-        if (hasMd5(deposit)) {
-            assertMd5(in, deposit.getMd5());
-        }
+        METS mets = loadMets(deposit);
+        assertChecksum(deposit, mets);
 
         FedoraRepository repository = new FedoraRepository(_props, deposit.getUsername(), deposit.getPassword());
         repository.connect();
 
         final String pid = deposit.getDepositID();
+
         {
-            updateIfPresent(repository, pid, getModsDatastream(metsDocument));
-            updateAttachmentDatastreams(repository, pid, getFileDatastreams(metsDocument, filesMarkedForRemoval));
-            updateOrAdd(repository, pid, getSlubInfoDatastream(metsDocument));
-            updateOrAdd(repository, pid, getQucosaXmlDatastream(metsDocument));
+            updateIfPresent(repository, pid, mets.getModsDatastream());
+            updateAttachmentDatastreams(repository, pid, mets.getFileDatastreams(filesMarkedForRemoval));
+            updateOrAdd(repository, pid, mets.getSlubInfoDatastream());
+            updateOrAdd(repository, pid, mets.getQucosaXmlDatastream());
         }
 
         FedoraObject fedoraObj = new FedoraObject(pid);
@@ -161,6 +142,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         delete(filesMarkedForRemoval);
         return result;
     }
+
 
     @Override
     public void validateObject(FedoraObject fedoraObject) throws SWORDException {
@@ -178,12 +160,8 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
     @Override
     protected DublinCore getDublinCore(DepositCollection pDeposit) {
         DublinCore dc = new DublinCore();
-        try {
-            addIfNotNull(dc.getTitle(), queries.get("primary_title").selectValue(metsDocument));
-            addIfNotNull(dc.getIdentifier(), queries.get("identifiers").selectValues(metsDocument));
-        } catch (JDOMException e) {
-            log.error(e.getMessage());
-        }
+        addIfNotNull(dc.getTitle(), _mets.getPrimaryTitle());
+        addIfNotNull(dc.getIdentifier(), _mets.getIdentifiers());
         return dc;
     }
 
@@ -202,10 +180,10 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
     @Override
     protected List<Datastream> getDatastreams(DepositCollection pDeposit) throws IOException, SWORDException {
         LinkedList<Datastream> resultList = new LinkedList<>();
-        addIfNotNull(resultList, getSlubInfoDatastream(metsDocument));
-        addIfNotNull(resultList, getQucosaXmlDatastream(metsDocument));
-        addIfNotNull(resultList, getModsDatastream(metsDocument));
-        addIfNotNull(resultList, getFileDatastreams(metsDocument, filesMarkedForRemoval));
+        addIfNotNull(resultList, _mets.getSlubInfoDatastream());
+        addIfNotNull(resultList, _mets.getQucosaXmlDatastream());
+        addIfNotNull(resultList, _mets.getModsDatastream());
+        addIfNotNull(resultList, _mets.getFileDatastreams(filesMarkedForRemoval));
         return resultList;
     }
 
@@ -213,6 +191,28 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         if (pDeposit.getOnBehalfOf() == null || pDeposit.getOnBehalfOf().isEmpty()) {
             log.warn("X-On-Behalf-Of header is not set. HTTP request principal will be used as repository object owner ID.");
         }
+    }
+
+    private void assertChecksum(DepositCollection deposit, METS mets) throws SWORDException {
+        if (hasMd5(deposit)) {
+            final String depositMd5 = deposit.getMd5();
+            final String metsMd5 = mets.getMd5();
+            if (!metsMd5.equals(depositMd5)) {
+                throw new SWORDException("Bad MD5 for submitted content: " + metsMd5 + ". Expected: " + depositMd5);
+            }
+        }
+    }
+
+    private METS loadMets(DepositCollection deposit) throws SWORDException {
+        METS mets;
+        try {
+            mets = new METS(deposit.getFile());
+        } catch (NoSuchAlgorithmException e) {
+            throw swordException("No MD5 digest algorithm found", e);
+        } catch (JDOMException | IOException e) {
+            throw swordException("Couldn't build METS from deposit", e);
+        }
+        return mets;
     }
 
     private String obtainPID(DepositCollection deposit, FedoraRepository repository) throws SWORDException {
@@ -238,26 +238,6 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         if (es != null) list.addAll(es);
     }
 
-    private void assertMd5(InputStream in, String md5) throws SWORDException {
-        if (in instanceof DigestInputStream) {
-            final byte[] md5digest = ((DigestInputStream) in).getMessageDigest().digest();
-            String digest = digestToString(md5digest);
-
-            if (!digest.equals(md5)) {
-                log.warn("Bad MD5 for submitted content: " + digest + ". Expected: " + md5);
-                throw new SWORDException("The received MD5 checksum for the deposited file did not match the checksum sent by the deposit client");
-            }
-        }
-    }
-
-    private String digestToString(byte[] digest) {
-        StringBuilder sb = new StringBuilder();
-        for (byte b : digest) {
-            sb.append(String.format("%02x", b));
-        }
-        return sb.toString();
-    }
-
     private void delete(List<File> files) {
         for (File f : files) {
             if (!f.delete()) {
@@ -270,157 +250,8 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         return (s == null) ? "" : s;
     }
 
-    private List<Datastream> getFileDatastreams(Document metsDocument, List<File> filesMarkedForRemoval) throws SWORDException {
-        List<Datastream> datastreamList = new LinkedList<>();
-        try {
-            for (Element e : queries.get("files").selectNodes(metsDocument)) {
-                final String id = validateAndReturn("file ID", e.getAttributeValue("ID"));
-
-                if (isADeleteRequest(e)) {
-                    datastreamList.add(new VoidDatastream(id));
-                } else {
-                    final Element fLocat = validateAndReturn("FLocat element", e.getChild("FLocat", Namespaces.METS));
-                    final String href = validateAndReturn("file content URL", fLocat.getAttributeValue("href", Namespaces.XLINK));
-                    final URI uri = new URI(href);
-                    final boolean isFile = uri.getScheme().equals("file");
-                    final boolean isTemporary = emptyIfNull(fLocat.getAttributeValue("USE")).equals("TEMPORARY");
-
-                    if (isFile && isTemporary) {
-                        markFileForDeletion(filesMarkedForRemoval, uri);
-                    }
-
-                    final String mimetype = validateAndReturn("mime type", e.getAttributeValue("MIMETYPE"));
-                    Datastream ds = buildDatastream(id, fLocat, href, mimetype, isFile);
-
-                    String digestType = emptyIfNull(e.getAttributeValue("CHECKSUMTYPE"));
-                    String digest = emptyIfNull(e.getAttributeValue("CHECKSUM"));
-                    if (!(digestType.isEmpty() || digest.isEmpty())) {
-                        ds.setDigestType(digestType);
-                        ds.setDigest(digest);
-                    }
-
-                    datastreamList.add(ds);
-                }
-            }
-        } catch (JDOMException e) {
-            log.error(e);
-            throw new SWORDException("Cannot obtain file datastreams", e);
-        } catch (URISyntaxException e) {
-            log.error(e);
-            throw new SWORDException("Invalid URL", e);
-        }
-        return datastreamList;
-    }
-
-    private Datastream buildDatastream(String id, Element fLocat, String href, String mimetype, boolean isFile) {
-        Datastream datastream;
-        if (isFile) {
-            LocalDatastream lds = new LocalDatastream(id, mimetype, href);
-            lds.setCleanup(false); // no automatic cleanup
-            datastream = lds;
-        } else {
-            datastream = new ManagedDatastream(id, mimetype, href);
-        }
-        datastream.setLabel(fLocat.getAttributeValue("title", Namespaces.XLINK));
-        return datastream;
-    }
-
-    private boolean isADeleteRequest(Element e) {
-        return e.getAttributeValue("USE") != null && e.getAttributeValue("USE").equals("DELETE");
-    }
-
-    private Datastream getModsDatastream(Document metsDocument) {
-        try {
-            return getDatastream(metsDocument, "mods", DS_ID_MODS, DS_ID_MODS_LABEL, DS_MODS_MIME_TYPE);
-        } catch (SWORDException e) {
-            log.error(e);
-            return null;
-        }
-    }
-
-    private Datastream getSlubInfoDatastream(Document metsDocument) {
-        try {
-            return getDatastream(metsDocument, "slubrights_mdwrap", DS_ID_SLUBINFO, DS_ID_SLUBINFO_LABEL);
-        } catch (SWORDException e) {
-            log.error(e);
-            return null;
-        }
-    }
-
-    private Datastream getQucosaXmlDatastream(Document metsDocument) {
-        try {
-            final Datastream datastream = getDatastream(metsDocument, "qucosaxml_mdwrap", DS_ID_QUCOSAXML, DS_ID_QUCOSAXML_LABEL);
-            if (datastream != null) {
-                datastream.setState(INACTIVE);
-            }
-            return datastream;
-        } catch (SWORDException e) {
-            log.error(e);
-            return null;
-        }
-    }
-
-    private Datastream getDatastream(Document metsDocument, String queryKey, String datastreamID, String datastreamLabel) throws SWORDException {
-        return getDatastream(metsDocument, queryKey, datastreamID, datastreamLabel, null);
-    }
-
-    private Datastream getDatastream(Document metsDocument, String queryKey, String datastreamID, String datastreamLabel, String overrideMimetype) throws SWORDException {
-        Datastream result = null;
-        try {
-            Element el = queries.get(queryKey).selectNode(metsDocument);
-            if (el != null) {
-                Document d = new Document((Element) el.clone());
-                result = new XMLInlineDatastream(datastreamID, d);
-                result.setLabel(datastreamLabel);
-                if (overrideMimetype != null) {
-                    result.setMimeType(overrideMimetype);
-                } else {
-                    result.setMimeType(el.getParentElement().getParentElement().getAttributeValue("MIMETYPE"));
-                }
-                String versioning = System.getProperty("datastream.versioning", "false");
-                result.setVersionable(Boolean.parseBoolean(versioning));
-            }
-        } catch (JDOMException e) {
-            throw new SWORDException("Cannot obtain datastream: " + datastreamID, e);
-        }
-        return result;
-    }
-
     private boolean hasMd5(DepositCollection deposit) {
         return (deposit.getMd5() != null) && (!deposit.getMd5().isEmpty());
-    }
-
-    private Document loadMetsXml(InputStream in) throws SWORDException {
-        try {
-            return new SAXBuilder().build(in);
-        } catch (JDOMException e) {
-            String message = "Couldn't build METS from deposit: " + e.toString();
-            log.error(message);
-            e.printStackTrace();
-            throw new SWORDException(message, e);
-        } catch (IOException e) {
-            String message = "Couldn't retrieve METS from deposit: " + e.toString();
-            log.error(message);
-            throw new SWORDException(message, e);
-        }
-    }
-
-    private void markFileForDeletion(List<File> filesMarkedForRemoval, URI uri) {
-        try {
-            filesMarkedForRemoval.add(new File(uri));
-        } catch (Exception ex) {
-            log.warn("Cannot mark file for deletion: " + ex.getMessage());
-        }
-    }
-
-    private InputStream prepInputStreamForDigestCheck(final InputStream in) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("MD5");
-            return new DigestInputStream(in, digest);
-        } catch (NoSuchAlgorithmException e) {
-            log.warn("Cannot check MD5 digest: " + e.getMessage());
-        }
-        return in;
     }
 
     private void updateAttachmentDatastreams(FedoraRepository repository, String pid, List<Datastream> datastreams) throws SWORDException {
@@ -454,14 +285,6 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
             } else {
                 repository.addDatastream(pid, datastream, null);
             }
-        }
-    }
-
-    private <E> E validateAndReturn(String description, E value) throws SWORDException {
-        if (value != null) {
-            return value;
-        } else {
-            throw new SWORDException("Cannot obtain " + description);
         }
     }
 
