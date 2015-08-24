@@ -20,7 +20,6 @@ import org.apache.log4j.Logger;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
-import org.jdom.Namespace;
 import org.jdom.input.SAXBuilder;
 import org.jdom.xpath.XPath;
 import org.purl.sword.base.SWORDEntry;
@@ -47,21 +46,25 @@ import static org.purl.sword.server.fedora.fedoraObjects.State.INACTIVE;
 
 public class QucosaMETSFileHandler extends DefaultFileHandler {
 
-    private static final String P_MIME_TYPE = "application/mods+xml";
-    private static final Namespace METS = Namespace.getNamespace("mets", "http://www.loc.gov/METS/");
-    private static final Namespace MODS = Namespace.getNamespace("mods", "http://www.loc.gov/mods/v3");
-    private static final Namespace XLINK = Namespace.getNamespace("xlink", "http://www.w3.org/1999/xlink");
-    private static final Namespace SLUB = Namespace.getNamespace("slub", "http://slub-dresden.de/");
+    private static final Logger log = Logger.getLogger(QucosaMETSFileHandler.class);
+
+    private static final String DEFAULT_COLLECTION_PID = "qucosa:all";
+
     private static final String DS_ID_SLUBINFO = "SLUB-INFO";
     private static final String DS_ID_SLUBINFO_LABEL = "SLUB Administrative Metadata";
+
     private static final String DS_ID_QUCOSAXML = "QUCOSA-XML";
     private static final String DS_ID_QUCOSAXML_LABEL = "Pristine Qucosa XML Metadata";
+
+    private static final String DS_MODS_MIME_TYPE = "application/mods+xml";
     private static final String DS_ID_MODS = "MODS";
     private static final String DS_ID_MODS_LABEL = "Object Bibliographic Metadata";
-    private static final Logger log = Logger.getLogger(QucosaMETSFileHandler.class);
-    private static final String DEFAULT_COLLECTION_PID = "qucosa:all";
+
     private final List<File> filesMarkedForRemoval = new LinkedList<>();
+
     private final Map<String, XPathQuery> queries;
+
+
     private Document metsDocument;
 
     public QucosaMETSFileHandler() throws JDOMException {
@@ -280,8 +283,8 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
                 if (isADeleteRequest(e)) {
                     datastreamList.add(new VoidDatastream(id));
                 } else {
-                    final Element fLocat = validateAndReturn("FLocat element", e.getChild("FLocat", METS));
-                    final String href = validateAndReturn("file content URL", fLocat.getAttributeValue("href", XLINK));
+                    final Element fLocat = validateAndReturn("FLocat element", e.getChild("FLocat", Namespaces.METS));
+                    final String href = validateAndReturn("file content URL", fLocat.getAttributeValue("href", Namespaces.XLINK));
                     final URI uri = new URI(href);
                     final boolean isFile = uri.getScheme().equals("file");
                     final boolean isTemporary = emptyIfNull(fLocat.getAttributeValue("USE")).equals("TEMPORARY");
@@ -322,7 +325,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         } else {
             datastream = new ManagedDatastream(id, mimetype, href);
         }
-        datastream.setLabel(fLocat.getAttributeValue("title", XLINK));
+        datastream.setLabel(fLocat.getAttributeValue("title", Namespaces.XLINK));
         return datastream;
     }
 
@@ -332,7 +335,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
 
     private Datastream getModsDatastream(Document metsDocument) {
         try {
-            return getDatastream(metsDocument, "mods", DS_ID_MODS, DS_ID_MODS_LABEL, P_MIME_TYPE);
+            return getDatastream(metsDocument, "mods", DS_ID_MODS, DS_ID_MODS_LABEL, DS_MODS_MIME_TYPE);
         } catch (SWORDException e) {
             log.error(e);
             return null;
@@ -485,10 +488,10 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
 
         public XPathQuery(String xp) throws JDOMException {
             xpath = XPath.newInstance(xp);
-            xpath.addNamespace(METS);
-            xpath.addNamespace(MODS);
-            xpath.addNamespace(XLINK);
-            xpath.addNamespace(SLUB);
+            xpath.addNamespace(Namespaces.METS);
+            xpath.addNamespace(Namespaces.MODS);
+            xpath.addNamespace(Namespaces.XLINK);
+            xpath.addNamespace(Namespaces.SLUB);
         }
 
         public String selectValue(Document doc) throws JDOMException {
