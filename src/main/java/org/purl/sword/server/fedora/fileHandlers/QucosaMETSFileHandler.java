@@ -27,7 +27,6 @@ import org.purl.sword.server.fedora.fedoraObjects.*;
 import java.io.File;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
-import java.util.LinkedList;
 import java.util.List;
 
 import static org.purl.sword.server.fedora.fedoraObjects.State.DELETED;
@@ -38,19 +37,15 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
 
     private static final String DEFAULT_COLLECTION_PID = "qucosa:all";
 
-    private final List<File> filesMarkedForRemoval = new LinkedList<>();
-
-    private METS _mets;
-
-    public QucosaMETSFileHandler() throws JDOMException {
+    public QucosaMETSFileHandler() {
         super("application/vnd.qucosa.mets+xml", "");
     }
 
     @Override
     public SWORDEntry ingestDeposit(DepositCollection deposit, ServiceDocument serviceDocument) throws SWORDException {
         validateDeposit(deposit);
-        _mets = loadMets(deposit);
-        assertChecksum(deposit, _mets);
+        METS mets = loadMets(deposit);
+        assertChecksum(deposit, mets);
 
         final FedoraRepository repository = new FedoraRepository(this._props, deposit.getUsername(), deposit.getPassword());
         repository.connect();
@@ -58,30 +53,24 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         String pid = obtainPID(deposit, repository);
 
         List<Datastream> datastreams;
-        try {
-            datastreams = getDatastreams(deposit);
-            ensureValidDSIds(datastreams);
-        } catch (IOException e) {
-            throw new SWORDException("Couldn't access uploaded file", e);
-        }
+        datastreams = mets.getDatastreams();
+        ensureValidDSIds(datastreams);
 
         final FedoraObject newFedoraObject = new FedoraObject(pid);
-        {
-            newFedoraObject.setIdentifiers(getIdentifiers(deposit));
-            newFedoraObject.setDc(getDublinCore(deposit));
-            newFedoraObject.setRelsext(getRelationships(deposit));
-            newFedoraObject.setDatastreams(datastreams);
-        }
+        newFedoraObject.setIdentifiers(getIdentifiers(deposit));
+        newFedoraObject.setRelsext(getRelationships(deposit));
+        newFedoraObject.setDatastreams(datastreams);
+        newFedoraObject.setDc(mets.getDublinCore());
+
         validateObject(newFedoraObject);
+        final SWORDEntry swordEntry = getSWORDEntry(deposit, serviceDocument, newFedoraObject);
 
         if (!deposit.isNoOp()) { // Don't ingest if no-op is set
             repository.ingest(newFedoraObject);
-            delete(filesMarkedForRemoval);
+            delete(mets.getTemporayFiles());
         }
 
-        SWORDEntry result = getSWORDEntry(deposit, serviceDocument, newFedoraObject);
-
-        return result;
+        return swordEntry;
     }
 
     private SWORDException swordException(String message, Exception e) {
@@ -129,18 +118,19 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
 
         final String pid = deposit.getDepositID();
 
-        {
-            updateIfPresent(repository, pid, mets.getModsDatastream());
-            updateAttachmentDatastreams(repository, pid, mets.getFileDatastreams(filesMarkedForRemoval));
-            updateOrAdd(repository, pid, mets.getSlubInfoDatastream());
-            updateOrAdd(repository, pid, mets.getQucosaXmlDatastream());
-        }
-
         FedoraObject fedoraObj = new FedoraObject(pid);
         fedoraObj.setDc(new DublinCore());
-        SWORDEntry result = getSWORDEntry(deposit, serviceDocument, fedoraObj);
-        delete(filesMarkedForRemoval);
-        return result;
+        final SWORDEntry swordEntry = getSWORDEntry(deposit, serviceDocument, fedoraObj);
+
+        if (!deposit.isNoOp()) { // Don't ingest if no-op is set
+            updateIfPresent(repository, pid, mets.getModsDatastream());
+            updateAttachmentDatastreams(repository, pid, mets.getFileDatastreams());
+            updateOrAdd(repository, pid, mets.getSlubInfoDatastream());
+            updateOrAdd(repository, pid, mets.getQucosaXmlDatastream());
+            delete(mets.getTemporayFiles());
+        }
+
+        return swordEntry;
     }
 
 
@@ -158,14 +148,6 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
     }
 
     @Override
-    protected DublinCore getDublinCore(DepositCollection pDeposit) {
-        DublinCore dc = new DublinCore();
-        addIfNotNull(dc.getTitle(), _mets.getPrimaryTitle());
-        addIfNotNull(dc.getIdentifier(), _mets.getIdentifiers());
-        return dc;
-    }
-
-    @Override
     protected Relationship getRelationships(DepositCollection pDeposit) {
         String collectionPid = pDeposit.getCollectionPid();
         if (collectionPid == null || collectionPid.isEmpty()) {
@@ -177,17 +159,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         return rels;
     }
 
-    @Override
-    protected List<Datastream> getDatastreams(DepositCollection pDeposit) throws IOException, SWORDException {
-        LinkedList<Datastream> resultList = new LinkedList<>();
-        addIfNotNull(resultList, _mets.getSlubInfoDatastream());
-        addIfNotNull(resultList, _mets.getQucosaXmlDatastream());
-        addIfNotNull(resultList, _mets.getModsDatastream());
-        addIfNotNull(resultList, _mets.getFileDatastreams(filesMarkedForRemoval));
-        return resultList;
-    }
-
-    protected void validateDeposit(DepositCollection pDeposit) {
+    private void validateDeposit(DepositCollection pDeposit) {
         if (pDeposit.getOnBehalfOf() == null || pDeposit.getOnBehalfOf().isEmpty()) {
             log.warn("X-On-Behalf-Of header is not set. HTTP request principal will be used as repository object owner ID.");
         }
@@ -228,14 +200,6 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
 
     private boolean isSet(String s) {
         return !emptyIfNull(s).isEmpty();
-    }
-
-    private <E> void addIfNotNull(List<E> list, E e) {
-        if (e != null) list.add(e);
-    }
-
-    private <E> void addIfNotNull(List<E> list, List<E> es) {
-        if (es != null) list.addAll(es);
     }
 
     private void delete(List<File> files) {

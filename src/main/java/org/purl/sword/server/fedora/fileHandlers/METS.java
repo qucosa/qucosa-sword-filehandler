@@ -48,7 +48,6 @@ public class METS {
     private static final String DS_ID_MODS = "MODS";
     private static final String DS_ID_MODS_LABEL = "Object Bibliographic Metadata";
 
-    private static final String METS_AMDSEC_PREFIX = "/mets:mets/mets:amdSec/mets:rightsMD";
     private static final String METS_DMDSEC_PREFIX = "/mets:mets/mets:dmdSec";
     private static final String MODS_PREFIX = METS_DMDSEC_PREFIX + "/mets:mdWrap[@MDTYPE='MODS']/mets:xmlData/mods:mods";
 
@@ -56,7 +55,7 @@ public class METS {
     private final XPathQuery XPATH_IDENTIFIERS = new XPathQuery(MODS_PREFIX + "/mods:identifier");
     private final XPathQuery XPATH_MODS = new XPathQuery(MODS_PREFIX);
     private final XPathQuery XPATH_QUCOSA = new XPathQuery(METS_DMDSEC_PREFIX + "/mets:mdWrap[@MDTYPE='OTHER' and @OTHERMDTYPE='QUCOSA-XML']/mets:xmlData/Opus");
-    private final XPathQuery XPATH_SLUB = new XPathQuery(METS_AMDSEC_PREFIX + "/mets:mdWrap[@MDTYPE='OTHER' and @OTHERMDTYPE='SLUBRIGHTS']/mets:xmlData/slub:info");
+    private final XPathQuery XPATH_SLUB = new XPathQuery("/mets:mets/mets:amdSec/mets:rightsMD" + "/mets:mdWrap[@MDTYPE='OTHER' and @OTHERMDTYPE='SLUBRIGHTS']/mets:xmlData/slub:info");
     private final XPathQuery XPATH_TITLE = new XPathQuery(MODS_PREFIX + "/mods:titleInfo/mods:title[1]");
 
     private final String md5;
@@ -100,10 +99,28 @@ public class METS {
         }
     }
 
-    public List<Datastream> getFileDatastreams(List<File> filesMarkedForRemoval) throws SWORDException {
+    public List<Datastream> getDatastreams() throws SWORDException {
+        LinkedList<Datastream> resultList = new LinkedList<>();
+        addIfNotNull(resultList, getSlubInfoDatastream());
+        addIfNotNull(resultList, getQucosaXmlDatastream());
+        addIfNotNull(resultList, getModsDatastream());
+        addIfNotNull(resultList, getFileDatastreams());
+        return resultList;
+    }
+
+    public DublinCore getDublinCore() {
+        DublinCore dc = new DublinCore();
+        addIfNotNull(dc.getTitle(), getPrimaryTitle());
+        addIfNotNull(dc.getIdentifier(), getIdentifiers());
+        return dc;
+    }
+
+
+    public List<Datastream> getFileDatastreams() throws SWORDException {
         List<Datastream> datastreamList = new LinkedList<>();
         try {
-            for (Element e : XPATH_FILES.selectNodes(metsDocument)) {
+            final List<Element> fileElements = XPATH_FILES.selectNodes(metsDocument);
+            for (Element e : fileElements) {
                 final String id = validateAndReturn("file ID", e.getAttributeValue("ID"));
 
                 if (isADeleteRequest(e)) {
@@ -113,13 +130,8 @@ public class METS {
                     final String href = validateAndReturn("file content URL", fLocat.getAttributeValue("href", Namespaces.XLINK));
                     final URI uri = new URI(href);
                     final boolean isFile = uri.getScheme().equals("file");
-                    final boolean isTemporary = emptyIfNull(fLocat.getAttributeValue("USE")).equals("TEMPORARY");
-
-                    if (isFile && isTemporary) {
-                        markFileForDeletion(filesMarkedForRemoval, uri);
-                    }
-
                     final String mimetype = validateAndReturn("mime type", e.getAttributeValue("MIMETYPE"));
+
                     Datastream ds = buildDatastream(id, fLocat, href, mimetype, isFile);
 
                     String digestType = emptyIfNull(e.getAttributeValue("CHECKSUMTYPE"));
@@ -132,6 +144,7 @@ public class METS {
                     datastreamList.add(ds);
                 }
             }
+
         } catch (JDOMException e) {
             throw new SWORDException("Cannot obtain file datastreams", e);
         } catch (URISyntaxException e) {
@@ -140,7 +153,32 @@ public class METS {
         return datastreamList;
     }
 
-    public String getPrimaryTitle() {
+    public List<File> getTemporayFiles() throws SWORDException {
+        final List<File> filesMarkedForRemoval = new LinkedList<>();
+        final List<Element> fileElements;
+        try {
+            fileElements = XPATH_FILES.selectNodes(metsDocument);
+            for (Element e : fileElements) {
+                if (!isADeleteRequest(e)) {
+                    final Element fLocat = validateAndReturn("FLocat element", e.getChild("FLocat", Namespaces.METS));
+                    final String href = validateAndReturn("file content URL", fLocat.getAttributeValue("href", Namespaces.XLINK));
+                    final URI uri = new URI(href);
+                    final boolean isFile = uri.getScheme().equals("file");
+                    final boolean isTemporary = emptyIfNull(fLocat.getAttributeValue("USE")).equals("TEMPORARY");
+                    if (isFile && isTemporary) {
+                        filesMarkedForRemoval.add(new File(uri));
+                    }
+                }
+            }
+        } catch (JDOMException e) {
+            throw new SWORDException("Cannot obtain file datastreams", e);
+        } catch (URISyntaxException ex) {
+            throw new SWORDException("Invalid URL", ex);
+        }
+        return filesMarkedForRemoval;
+    }
+
+    private String getPrimaryTitle() {
         try {
             return XPATH_TITLE.selectValue(metsDocument);
         } catch (JDOMException e) {
@@ -148,7 +186,7 @@ public class METS {
         }
     }
 
-    public List<String> getIdentifiers() {
+    private List<String> getIdentifiers() {
         try {
             return XPATH_IDENTIFIERS.selectValues(metsDocument);
         } catch (JDOMException e) {
@@ -207,10 +245,6 @@ public class METS {
         return (s == null) ? "" : s;
     }
 
-    private void markFileForDeletion(List<File> filesMarkedForRemoval, URI uri) {
-        filesMarkedForRemoval.add(new File(uri));
-    }
-
     private Datastream buildDatastream(String id, Element fLocat, String href, String mimetype, boolean isFile) {
         Datastream datastream;
         if (isFile) {
@@ -222,6 +256,14 @@ public class METS {
         }
         datastream.setLabel(fLocat.getAttributeValue("title", Namespaces.XLINK));
         return datastream;
+    }
+
+    private <E> void addIfNotNull(List<E> list, E e) {
+        if (e != null) list.add(e);
+    }
+
+    private <E> void addIfNotNull(List<E> list, List<E> es) {
+        if (es != null) list.addAll(es);
     }
 
 }
