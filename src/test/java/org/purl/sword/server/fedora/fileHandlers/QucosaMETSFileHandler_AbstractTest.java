@@ -107,6 +107,7 @@ abstract class QucosaMETSFileHandler_AbstractTest {
                     }
                 });
         when(mockFedoraRepository.mintPid()).thenCallRealMethod();
+        when(mockFedoraRepository.connect()).thenReturn(mockFedoraRepository);
     }
 
     DepositCollection buildDeposit(String metsFileName) {

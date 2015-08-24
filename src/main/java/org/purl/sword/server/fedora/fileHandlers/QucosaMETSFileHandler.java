@@ -43,39 +43,31 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
 
     @Override
     public SWORDEntry ingestDeposit(DepositCollection deposit, ServiceDocument serviceDocument) throws SWORDException {
-        validateDeposit(deposit);
-        METS mets = loadMets(deposit);
-        assertChecksum(deposit, mets);
-
-        final FedoraRepository repository = new FedoraRepository(this._props, deposit.getUsername(), deposit.getPassword());
-        repository.connect();
-
-        String pid = obtainPID(deposit, repository);
+        METS mets = loadAndValidate(deposit);
+        final FedoraRepository repository = connectRepository(deposit);
+        final String pid = obtainPID(deposit, repository);
+        final FedoraObject fedoraObject = new FedoraObject(pid);
 
         List<Datastream> datastreams;
         datastreams = mets.getDatastreams();
         ensureValidDSIds(datastreams);
 
-        final FedoraObject newFedoraObject = new FedoraObject(pid);
-        newFedoraObject.setIdentifiers(getIdentifiers(deposit));
-        newFedoraObject.setRelsext(getRelationships(deposit));
-        newFedoraObject.setDatastreams(datastreams);
-        newFedoraObject.setDc(mets.getDublinCore());
+        fedoraObject.setIdentifiers(getIdentifiers(deposit));
+        fedoraObject.setRelsext(getRelationships(deposit));
+        fedoraObject.setDatastreams(datastreams);
+        fedoraObject.setDc(mets.getDublinCore());
 
-        validateObject(newFedoraObject);
-        final SWORDEntry swordEntry = getSWORDEntry(deposit, serviceDocument, newFedoraObject);
+        validateObject(fedoraObject);
+        final SWORDEntry swordEntry = getSWORDEntry(deposit, serviceDocument, fedoraObject);
 
         if (!deposit.isNoOp()) { // Don't ingest if no-op is set
-            repository.ingest(newFedoraObject);
+            repository.ingest(fedoraObject);
             delete(mets.getTemporayFiles());
         }
 
         return swordEntry;
     }
 
-    private SWORDException swordException(String message, Exception e) {
-        return new SWORDException(message, e);
-    }
 
     /**
      * Use deposit information to update an existing Fedora object.
@@ -109,18 +101,14 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
      */
     @Override
     public SWORDEntry updateDeposit(DepositCollection deposit, ServiceDocument serviceDocument) throws SWORDException {
-        validateDeposit(deposit);
-        METS mets = loadMets(deposit);
-        assertChecksum(deposit, mets);
-
-        FedoraRepository repository = new FedoraRepository(_props, deposit.getUsername(), deposit.getPassword());
-        repository.connect();
-
+        METS mets = loadAndValidate(deposit);
+        final FedoraRepository repository = connectRepository(deposit);
         final String pid = deposit.getDepositID();
+        final FedoraObject fedoraObject = new FedoraObject(pid);
 
-        FedoraObject fedoraObj = new FedoraObject(pid);
-        fedoraObj.setDc(new DublinCore());
-        final SWORDEntry swordEntry = getSWORDEntry(deposit, serviceDocument, fedoraObj);
+        fedoraObject.setDc(new DublinCore());
+
+        final SWORDEntry swordEntry = getSWORDEntry(deposit, serviceDocument, fedoraObject);
 
         if (!deposit.isNoOp()) { // Don't ingest if no-op is set
             updateIfPresent(repository, pid, mets.getModsDatastream());
@@ -131,6 +119,13 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         }
 
         return swordEntry;
+    }
+
+    private METS loadAndValidate(DepositCollection deposit) throws SWORDException {
+        validateDeposit(deposit);
+        METS mets = loadMets(deposit);
+        assertChecksum(deposit, mets);
+        return mets;
     }
 
 
@@ -157,6 +152,15 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         rels.add("isMemberOf", "info:fedora/" + collectionPid);
         rels.addModel("info:fedora/qucosa:CModel");
         return rels;
+    }
+
+    private FedoraRepository connectRepository(DepositCollection deposit) throws SWORDException {
+        final FedoraRepository repo = new FedoraRepository(this._props, deposit.getUsername(), deposit.getPassword());
+        return repo.connect();
+    }
+
+    private SWORDException swordException(String message, Exception e) {
+        return new SWORDException(message, e);
     }
 
     private void validateDeposit(DepositCollection pDeposit) {
