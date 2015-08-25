@@ -168,6 +168,9 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
                 case "series":
                     type = "isConstituentOf";
                     break;
+                case "preceding":
+                    type = "isDerivationOf";
+                    break;
             }
             rels.add(type, value);
         }

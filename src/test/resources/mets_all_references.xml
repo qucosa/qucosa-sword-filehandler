@@ -42,6 +42,12 @@
                         </mods:titleInfo>
                     </mods:relatedItem>
 
+                    <mods:relatedItem
+                            type="preceding"
+                            xlink:href="http://nbn-resolving.de/urn:nbn:de:bsz:14-qucosa-25559">
+                        <mods:identifier type="urn">urn:nbn:de:bsz:14-qucosa-25559</mods:identifier>
+                    </mods:relatedItem>
+
                     <mods:relatedItem type="constituent"
                                       xlink:href="http://nbn-resolving.de/urn:nbn:de:bsz:14-qucosa-32825">
                         <mods:identifier type="urn">urn:nbn:de:bsz:14-qucosa-32825</mods:identifier>
