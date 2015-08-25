@@ -36,6 +36,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
     private static final Logger log = Logger.getLogger(QucosaMETSFileHandler.class);
 
     private static final String DEFAULT_COLLECTION_PID = "qucosa:all";
+    public static final String QUCOSA_CMODEL = "qucosa:CModel";
 
     public QucosaMETSFileHandler() {
         super("application/vnd.qucosa.mets+xml", "");
@@ -53,7 +54,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         ensureValidDSIds(datastreams);
 
         fedoraObject.setIdentifiers(getIdentifiers(deposit));
-        fedoraObject.setRelsext(getRelationships(deposit));
+        fedoraObject.setRelsext(buildRelationships(deposit, mets));
         fedoraObject.setDatastreams(datastreams);
         fedoraObject.setDc(mets.getDublinCore());
 
@@ -67,7 +68,6 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
 
         return swordEntry;
     }
-
 
     /**
      * Use deposit information to update an existing Fedora object.
@@ -142,15 +142,17 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         if (!modsExists) throw new SWORDException("Missing MODS datastream in METS source");
     }
 
-    @Override
-    protected Relationship getRelationships(DepositCollection pDeposit) {
-        String collectionPid = pDeposit.getCollectionPid();
+    private Relationship buildRelationships(DepositCollection deposit, METS mets) {
+        Relationship rels = super.getRelationships(deposit);
+
+        rels.addModel("info:fedora/" + QUCOSA_CMODEL);
+
+        String collectionPid = deposit.getCollectionPid();
         if (collectionPid == null || collectionPid.isEmpty()) {
             collectionPid = DEFAULT_COLLECTION_PID;
         }
-        Relationship rels = super.getRelationships(pDeposit);
         rels.add("isMemberOf", "info:fedora/" + collectionPid);
-        rels.addModel("info:fedora/qucosa:CModel");
+
         return rels;
     }
 
