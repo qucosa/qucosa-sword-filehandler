@@ -284,7 +284,7 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
     }
 
     @Test
-    public void emits_IsContituentOf_Relationship() throws Exception {
+    public void emits_IsContituentOf_Relationship_for_constituent_type() throws Exception {
         FileHandler fh = new QucosaMETSFileHandler();
         ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
         final DepositCollection deposit = buildDeposit(METS_FILE_ALLREFS);
@@ -296,6 +296,26 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
         RelationshipInspector relationship = new RelationshipInspector(fo.getRelsext());
 
         final String constituentOf = "urn:nbn:de:bsz:14-qucosa-32825";
+
+        assertNotNull("Should have defined relationships", relationship);
+        assertRelationship("Should have isConstituentOf relationship to: " + constituentOf,
+                "isConstituentOf", "info:fedora/" + constituentOf,
+                relationship.getElements());
+    }
+
+    @Test
+    public void emits_IsContituentOf_Relationship_for_series_type() throws Exception {
+        FileHandler fh = new QucosaMETSFileHandler();
+        ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
+        final DepositCollection deposit = buildDeposit(METS_FILE_ALLREFS);
+
+        fh.ingestDeposit(deposit, buildServiceDocument());
+
+        verify(mockFedoraRepository).ingest(argument.capture());
+        FedoraObject fo = argument.getValue();
+        RelationshipInspector relationship = new RelationshipInspector(fo.getRelsext());
+
+        final String constituentOf = "urn:nbn:de:bsz:14-qucosa-38419";
 
         assertNotNull("Should have defined relationships", relationship);
         assertRelationship("Should have isConstituentOf relationship to: " + constituentOf,

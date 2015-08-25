@@ -165,6 +165,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
             String value = ri.getChildText("identifier", Namespaces.MODS);
             switch (type) {
                 case "constituent":
+                case "series":
                     type = "isConstituentOf";
                     break;
             }
