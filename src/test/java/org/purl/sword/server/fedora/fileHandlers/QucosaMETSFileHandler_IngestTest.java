@@ -283,6 +283,26 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
                 relationship.getElements());
     }
 
+    @Test
+    public void emits_IsContituentOf_Relationship() throws Exception {
+        FileHandler fh = new QucosaMETSFileHandler();
+        ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
+        final DepositCollection deposit = buildDeposit(METS_FILE_OK);
+
+        fh.ingestDeposit(deposit, buildServiceDocument());
+
+        verify(mockFedoraRepository).ingest(argument.capture());
+        FedoraObject fo = argument.getValue();
+        RelationshipInspector relationship = new RelationshipInspector(fo.getRelsext());
+
+        final String constituentOf = "urn:nbn:de:bsz:14-qucosa-32825";
+
+        assertNotNull("Should have defined relationships", relationship);
+        assertRelationship("Should have isConstituentOf relationship to: " + constituentOf,
+                "isConstituentOf", "info:fedora/" + constituentOf,
+                relationship.getElements());
+    }
+
     private void assertRelationship(String message, String name, String value, List<Element> elements) {
         boolean found = false;
         final Namespace ns_rdf = Namespace.getNamespace("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");

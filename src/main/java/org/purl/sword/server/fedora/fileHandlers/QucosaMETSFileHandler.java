@@ -17,6 +17,7 @@
 package org.purl.sword.server.fedora.fileHandlers;
 
 import org.apache.log4j.Logger;
+import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.purl.sword.base.SWORDEntry;
 import org.purl.sword.base.SWORDException;
@@ -33,10 +34,9 @@ import static org.purl.sword.server.fedora.fedoraObjects.State.DELETED;
 
 public class QucosaMETSFileHandler extends DefaultFileHandler {
 
-    private static final Logger log = Logger.getLogger(QucosaMETSFileHandler.class);
-
-    private static final String DEFAULT_COLLECTION_PID = "qucosa:all";
     public static final String QUCOSA_CMODEL = "qucosa:CModel";
+    private static final Logger log = Logger.getLogger(QucosaMETSFileHandler.class);
+    private static final String DEFAULT_COLLECTION_PID = "qucosa:all";
 
     public QucosaMETSFileHandler() {
         super("application/vnd.qucosa.mets+xml", "");
@@ -44,26 +44,26 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
 
     @Override
     public SWORDEntry ingestDeposit(DepositCollection deposit, ServiceDocument serviceDocument) throws SWORDException {
-        METS mets = loadAndValidate(deposit);
+        METSContainer metsContainer = loadAndValidate(deposit);
         final FedoraRepository repository = connectRepository(deposit);
         final String pid = obtainPID(deposit, repository);
         final FedoraObject fedoraObject = new FedoraObject(pid);
 
         List<Datastream> datastreams;
-        datastreams = mets.getDatastreams();
+        datastreams = metsContainer.getDatastreams();
         ensureValidDSIds(datastreams);
 
         fedoraObject.setIdentifiers(getIdentifiers(deposit));
-        fedoraObject.setRelsext(buildRelationships(deposit, mets));
+        fedoraObject.setRelsext(buildRelationships(deposit, metsContainer));
         fedoraObject.setDatastreams(datastreams);
-        fedoraObject.setDc(mets.getDublinCore());
+        fedoraObject.setDc(metsContainer.getDublinCore());
 
         validateObject(fedoraObject);
         final SWORDEntry swordEntry = getSWORDEntry(deposit, serviceDocument, fedoraObject);
 
         if (!deposit.isNoOp()) { // Don't ingest if no-op is set
             repository.ingest(fedoraObject);
-            delete(mets.getTemporayFiles());
+            delete(metsContainer.getTemporayFiles());
         }
 
         return swordEntry;
@@ -101,7 +101,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
      */
     @Override
     public SWORDEntry updateDeposit(DepositCollection deposit, ServiceDocument serviceDocument) throws SWORDException {
-        METS mets = loadAndValidate(deposit);
+        METSContainer metsContainer = loadAndValidate(deposit);
         final FedoraRepository repository = connectRepository(deposit);
         final String pid = deposit.getDepositID();
         final FedoraObject fedoraObject = new FedoraObject(pid);
@@ -111,21 +111,21 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         final SWORDEntry swordEntry = getSWORDEntry(deposit, serviceDocument, fedoraObject);
 
         if (!deposit.isNoOp()) { // Don't ingest if no-op is set
-            updateIfPresent(repository, pid, mets.getModsDatastream());
-            updateAttachmentDatastreams(repository, pid, mets.getFileDatastreams());
-            updateOrAdd(repository, pid, mets.getSlubInfoDatastream());
-            updateOrAdd(repository, pid, mets.getQucosaXmlDatastream());
-            delete(mets.getTemporayFiles());
+            updateIfPresent(repository, pid, metsContainer.getModsDatastream());
+            updateAttachmentDatastreams(repository, pid, metsContainer.getFileDatastreams());
+            updateOrAdd(repository, pid, metsContainer.getSlubInfoDatastream());
+            updateOrAdd(repository, pid, metsContainer.getQucosaXmlDatastream());
+            delete(metsContainer.getTemporayFiles());
         }
 
         return swordEntry;
     }
 
-    private METS loadAndValidate(DepositCollection deposit) throws SWORDException {
+    private METSContainer loadAndValidate(DepositCollection deposit) throws SWORDException {
         validateDeposit(deposit);
-        METS mets = loadMets(deposit);
-        assertChecksum(deposit, mets);
-        return mets;
+        METSContainer metsContainer = loadMets(deposit);
+        assertChecksum(deposit, metsContainer);
+        return metsContainer;
     }
 
 
@@ -142,7 +142,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         if (!modsExists) throw new SWORDException("Missing MODS datastream in METS source");
     }
 
-    private Relationship buildRelationships(DepositCollection deposit, METS mets) {
+    private Relationship buildRelationships(DepositCollection deposit, METSContainer metsContainer) {
         Relationship rels = super.getRelationships(deposit);
 
         rels.addModel("info:fedora/" + QUCOSA_CMODEL);
@@ -153,7 +153,23 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         }
         rels.add("isMemberOfCollection", collectionPid);
 
+        addDocumentRelations(metsContainer, rels);
+
         return rels;
+    }
+
+    private void addDocumentRelations(METSContainer metsContainer, Relationship rels) {
+        List<Element> relatedItems = metsContainer.getModsRelatedItems();
+        for (Element ri : relatedItems) {
+            String type = ri.getAttributeValue("type");
+            String value = ri.getChildText("identifier", Namespaces.MODS);
+            switch (type) {
+                case "constituent":
+                    type = "isConstituentOf";
+                    break;
+            }
+            rels.add(type, value);
+        }
     }
 
     private FedoraRepository connectRepository(DepositCollection deposit) throws SWORDException {
@@ -171,26 +187,26 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         }
     }
 
-    private void assertChecksum(DepositCollection deposit, METS mets) throws SWORDException {
+    private void assertChecksum(DepositCollection deposit, METSContainer metsContainer) throws SWORDException {
         if (hasMd5(deposit)) {
             final String depositMd5 = deposit.getMd5();
-            final String metsMd5 = mets.getMd5();
+            final String metsMd5 = metsContainer.getMd5();
             if (!metsMd5.equals(depositMd5)) {
                 throw new SWORDException("Bad MD5 for submitted content: " + metsMd5 + ". Expected: " + depositMd5);
             }
         }
     }
 
-    private METS loadMets(DepositCollection deposit) throws SWORDException {
-        METS mets;
+    private METSContainer loadMets(DepositCollection deposit) throws SWORDException {
+        METSContainer metsContainer;
         try {
-            mets = new METS(deposit.getFile());
+            metsContainer = new METSContainer(deposit.getFile());
         } catch (NoSuchAlgorithmException e) {
             throw swordException("No MD5 digest algorithm found", e);
         } catch (JDOMException | IOException e) {
             throw swordException("Couldn't build METS from deposit", e);
         }
-        return mets;
+        return metsContainer;
     }
 
     private String obtainPID(DepositCollection deposit, FedoraRepository repository) throws SWORDException {

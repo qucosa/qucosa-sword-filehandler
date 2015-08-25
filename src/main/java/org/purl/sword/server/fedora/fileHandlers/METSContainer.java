@@ -36,7 +36,7 @@ import java.util.List;
 
 import static org.purl.sword.server.fedora.fedoraObjects.State.INACTIVE;
 
-public class METS {
+public class METSContainer {
 
     private static final String DS_ID_SLUBINFO = "SLUB-INFO";
     private static final String DS_ID_SLUBINFO_LABEL = "SLUB Administrative Metadata";
@@ -55,13 +55,13 @@ public class METS {
     private final XPathQuery XPATH_IDENTIFIERS = new XPathQuery(MODS_PREFIX + "/mods:identifier");
     private final XPathQuery XPATH_MODS = new XPathQuery(MODS_PREFIX);
     private final XPathQuery XPATH_QUCOSA = new XPathQuery(METS_DMDSEC_PREFIX + "/mets:mdWrap[@MDTYPE='OTHER' and @OTHERMDTYPE='QUCOSA-XML']/mets:xmlData/Opus");
+    private final XPathQuery XPATH_RELATEDITEMS = new XPathQuery(MODS_PREFIX + "/mods:relatedItem");
     private final XPathQuery XPATH_SLUB = new XPathQuery("/mets:mets/mets:amdSec/mets:rightsMD" + "/mets:mdWrap[@MDTYPE='OTHER' and @OTHERMDTYPE='SLUBRIGHTS']/mets:xmlData/slub:info");
     private final XPathQuery XPATH_TITLE = new XPathQuery(MODS_PREFIX + "/mods:titleInfo/mods:title[1]");
-
     private final String md5;
     private final Document metsDocument;
 
-    public METS(InputStream in) throws NoSuchAlgorithmException, JDOMException, IOException {
+    public METSContainer(InputStream in) throws NoSuchAlgorithmException, JDOMException, IOException {
         DigestInputStream din = new DigestInputStream(in, MessageDigest.getInstance("MD5"));
         metsDocument = new SAXBuilder().build(din);
         md5 = digestToString(din.getMessageDigest());
@@ -176,6 +176,14 @@ public class METS {
             throw new SWORDException("Invalid URL", ex);
         }
         return filesMarkedForRemoval;
+    }
+
+    public List<Element> getModsRelatedItems() {
+        try {
+            return XPATH_RELATEDITEMS.selectNodes(metsDocument);
+        } catch (JDOMException e) {
+            return null;
+        }
     }
 
     private String getPrimaryTitle() {
