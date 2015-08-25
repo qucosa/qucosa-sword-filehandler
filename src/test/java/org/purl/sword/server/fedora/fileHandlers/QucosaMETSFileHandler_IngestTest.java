@@ -260,19 +260,37 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
         RelationshipInspector relationship = new RelationshipInspector(fo.getRelsext());
 
         assertNotNull("Should have defined relationships", relationship);
-        assertIsMember("Should have collection membership to: " + COLLECTION,
-                "info:fedora/" + COLLECTION,
+        assertRelationship("Should have collection membership to: " + COLLECTION,
+                "isMemberOf", "info:fedora/" + COLLECTION,
                 relationship.getElements());
     }
 
-    private void assertIsMember(String message, String collectionPid, List<Element> elements) {
+    @Test
+    public void hasQucosaContentModel() throws Exception {
+        FileHandler fh = new QucosaMETSFileHandler();
+        ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
+        final DepositCollection deposit = buildDeposit(METS_FILE_OK);
+
+        fh.ingestDeposit(deposit, buildServiceDocument());
+
+        verify(mockFedoraRepository).ingest(argument.capture());
+        FedoraObject fo = argument.getValue();
+        RelationshipInspector relationship = new RelationshipInspector(fo.getRelsext());
+
+        assertNotNull("Should have defined relationships", relationship);
+        assertRelationship("Should have model relationship to: " + CONTENT_MODEL,
+                "hasModel", CONTENT_MODEL,
+                relationship.getElements());
+    }
+
+    private void assertRelationship(String message, String name, String value, List<Element> elements) {
         boolean found = false;
         final Namespace ns_rdf = Namespace.getNamespace("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
         for (Element e : elements) {
-            if (e.getName().equals("isMemberOf")) {
+            if (e.getName().equals(name)) {
                 Attribute attr = e.getAttribute("resource", ns_rdf);
                 String val = attr.getValue();
-                if (val != null && val.equals(collectionPid)) {
+                if (val != null && val.equals(value)) {
                     found = true;
                     break;
                 }
