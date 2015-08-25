@@ -251,7 +251,7 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
     public void isMemberOfCollectionAfterIngest() throws Exception {
         FileHandler fh = new QucosaMETSFileHandler();
         ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
-        final DepositCollection deposit = buildDeposit(METS_FILE_OK);
+        final DepositCollection deposit = buildDeposit(METS_FILE_ALLREFS);
 
         fh.ingestDeposit(deposit, buildServiceDocument());
 
@@ -269,7 +269,7 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
     public void hasQucosaContentModel() throws Exception {
         FileHandler fh = new QucosaMETSFileHandler();
         ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
-        final DepositCollection deposit = buildDeposit(METS_FILE_OK);
+        final DepositCollection deposit = buildDeposit(METS_FILE_ALLREFS);
 
         fh.ingestDeposit(deposit, buildServiceDocument());
 
@@ -287,7 +287,7 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
     public void emits_IsContituentOf_Relationship() throws Exception {
         FileHandler fh = new QucosaMETSFileHandler();
         ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
-        final DepositCollection deposit = buildDeposit(METS_FILE_OK);
+        final DepositCollection deposit = buildDeposit(METS_FILE_ALLREFS);
 
         fh.ingestDeposit(deposit, buildServiceDocument());
 
