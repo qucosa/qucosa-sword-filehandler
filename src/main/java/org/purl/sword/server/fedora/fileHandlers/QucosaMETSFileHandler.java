@@ -151,7 +151,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         if (collectionPid == null || collectionPid.isEmpty()) {
             collectionPid = DEFAULT_COLLECTION_PID;
         }
-        rels.add("isMemberOf", "info:fedora/" + collectionPid);
+        rels.add("isMemberOfCollection", collectionPid);
 
         return rels;
     }

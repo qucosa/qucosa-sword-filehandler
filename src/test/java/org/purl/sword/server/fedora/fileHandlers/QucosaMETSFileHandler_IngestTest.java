@@ -261,7 +261,7 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
 
         assertNotNull("Should have defined relationships", relationship);
         assertRelationship("Should have collection membership to: " + COLLECTION,
-                "isMemberOf", "info:fedora/" + COLLECTION,
+                "isMemberOfCollection", "info:fedora/" + COLLECTION,
                 relationship.getElements());
     }
 
