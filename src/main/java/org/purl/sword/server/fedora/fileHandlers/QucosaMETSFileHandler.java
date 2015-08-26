@@ -143,7 +143,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
     }
 
     private Relationship buildRelationships(DepositCollection deposit, METSContainer metsContainer) {
-        Relationship rels = super.getRelationships(deposit);
+        Relationship rels = new Relationship();
 
         rels.addModel("info:fedora/" + QUCOSA_CMODEL);
 
