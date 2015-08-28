@@ -65,10 +65,12 @@ abstract class QucosaMETSFileHandler_AbstractTest {
     public static final String METS_FILE_BAD = "/mets_missing_mods.xml";
     public static final String METS_FILE_BAD2 = "/mets_invalid_file.xml";
     public static final String METS_FILE_ADD_DS = "/mets_add_ds.xml";
+    public static final String METS_FILE_ALLREFS = "/mets_all_references.xml";
     public static final String METS_FILE_DELETE_DS = "/mets_delete_ds.xml";
     public static final String METS_FILE_UPDATE = "/mets_update.xml";
     public static final String METS_FILE_CHECKSUM = "/mets_file_checksum.xml";
     public static final String METS_FILE_UPDATE_MD5 = "a92f77a311ce66cb4cb57993e1d3052f";
+    public static final String CONTENT_MODEL = "info:fedora/qucosa:CModel";
 
     protected FedoraRepository mockFedoraRepository;
     protected Appender mockAppender;
@@ -107,6 +109,7 @@ abstract class QucosaMETSFileHandler_AbstractTest {
                     }
                 });
         when(mockFedoraRepository.mintPid()).thenCallRealMethod();
+        when(mockFedoraRepository.connect()).thenReturn(mockFedoraRepository);
     }
 
     DepositCollection buildDeposit(String metsFileName) {

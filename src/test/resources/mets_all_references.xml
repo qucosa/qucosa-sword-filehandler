@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2015 Saxon State and University Library Dresden (SLUB)
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<mets:mets xmlns:mets="http://www.loc.gov/METS/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:xlink="http://www.w3.org/1999/xlink"
+           OBJID="qucosa:1"
+           xsi:schemaLocation="http://www.loc.gov/METS/ http://www.loc.gov/standards/mets/mets.xsd">
+    <mets:dmdSec ID="DMD_000">
+        <mets:mdWrap MDTYPE="MODS">
+            <mets:xmlData>
+                <mods:mods xmlns:mods="http://www.loc.gov/mods/v3"
+                           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                           xsi:schemaLocation="http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-5.xsd">
+                    <mods:titleInfo lang="ger" usage="primary">
+                        <mods:title>Qucosa: Quality Content of Saxony</mods:title>
+                        <mods:subTitle>Das EFRE-Projekt Sächsischer Dokumentenserver</mods:subTitle>
+                    </mods:titleInfo>
+                    <mods:identifier type="urn">urn:nbn:de:bsz:14-qucosa-32992</mods:identifier>
+                    <mods:identifier type="swb-ppn">322202922</mods:identifier>
+
+                    <mods:relatedItem
+                            type="series"
+                            displayLabel="Link zur Schriftenreihe"
+                            xlink:href="http://nbn-resolving.de/urn:nbn:de:bsz:14-qucosa-38419">
+                        <mods:identifier type="urn">urn:nbn:de:bsz:14-qucosa-38419</mods:identifier>
+                        <mods:titleInfo>
+                            <mods:partNumber>201009</mods:partNumber>
+                        </mods:titleInfo>
+                    </mods:relatedItem>
+
+                    <mods:relatedItem
+                            type="preceding"
+                            xlink:href="http://nbn-resolving.de/urn:nbn:de:bsz:14-qucosa-25559">
+                        <mods:identifier type="urn">urn:nbn:de:bsz:14-qucosa-25559</mods:identifier>
+                    </mods:relatedItem>
+
+                    <mods:relatedItem type="constituent"
+                                      xlink:href="http://nbn-resolving.de/urn:nbn:de:bsz:14-qucosa-32825">
+                        <mods:identifier type="urn">urn:nbn:de:bsz:14-qucosa-32825</mods:identifier>
+                        <mods:titleInfo>
+                            <mods:title>BIS - Das Magazin der Bibliotheken in Sachsen</mods:title>
+                            <mods:partNumber>3(2010)1, S. 26 - 27</mods:partNumber>
+                        </mods:titleInfo>
+                    </mods:relatedItem>
+                </mods:mods>
+            </mets:xmlData>
+        </mets:mdWrap>
+    </mets:dmdSec>
+    <mets:amdSec ID="AMD_000">
+        <mets:rightsMD ID="RIGHTS_000">
+            <mets:mdWrap MDTYPE="OTHER" OTHERMDTYPE="SLUBRIGHTS" MIMETYPE="application/vnd.slub-info+xml">
+                <mets:xmlData>
+                    <slub:info xmlns:slub="http://slub-dresden.de/">
+                        <slub:submitter>
+                            <slub:name>Frau Administrator</slub:name>
+                            <slub:contact>mailto:qucosa.admin@slub-dresden.de</slub:contact>
+                        </slub:submitter>
+                        <slub:project>OpenAire Project Name</slub:project>
+                        <slub:client>Mandant</slub:client>
+                        <slub:rights>
+                            <slub:license valueURI="URI der Lizenz">Lizenzangabe</slub:license>
+                            <slub:embargo encoding="iso8601">2014-11-26</slub:embargo>
+                            <slub:accessDNB>true</slub:accessDNB>
+                            <slub:accessPOD>true</slub:accessPOD>
+                        </slub:rights>
+                    </slub:info>
+                </mets:xmlData>
+            </mets:mdWrap>
+        </mets:rightsMD>
+    </mets:amdSec>
+    <mets:fileSec>
+        <mets:fileGrp USE="ORIGINAL">
+            <mets:file ID="ATT-1" MIMETYPE="application/pdf">
+                <mets:FLocat xmlns:xlin="http://www.w3.org/1999/xlink"
+                             LOCTYPE="URL"
+                             xlin:href="file:/Attachment.pdf"
+                             xlin:title="Attachment"
+                        />
+            </mets:file>
+        </mets:fileGrp>
+    </mets:fileSec>
+    <mets:structMap>
+        <mets:div DMDID="DMD_000" TYPE="article">
+            <mets:fptr FILEID="ATT-1"/>
+        </mets:div>
+    </mets:structMap>
+</mets:mets>

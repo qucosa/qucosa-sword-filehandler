@@ -59,6 +59,18 @@ public class QucosaMETSFileHandler_UpdateTest extends QucosaMETSFileHandler_Abst
     }
 
     @Test
+    public void dcGetsUpdated() throws Exception {
+        FileHandler fh = new QucosaMETSFileHandler();
+        when(mockFedoraRepository.hasDatastream(eq("test:1"), eq("DC"))).thenReturn(true);
+        ArgumentCaptor<Datastream> argument = ArgumentCaptor.forClass(Datastream.class);
+        DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE, "test:1");
+
+        fh.updateDeposit(depositCollection, buildServiceDocument());
+
+        verify(mockFedoraRepository).modifyDatastream(eq("test:1"), argument.capture(), anyString());
+    }
+
+    @Test
     public void modsGetsUpdated() throws Exception {
         FileHandler fh = new QucosaMETSFileHandler();
         when(mockFedoraRepository.hasDatastream(eq("test:1"), eq("MODS"))).thenReturn(true);
@@ -171,7 +183,7 @@ public class QucosaMETSFileHandler_UpdateTest extends QucosaMETSFileHandler_Abst
         SWORDEntry swordEntry = fh.updateDeposit(depositCollection, buildServiceDocument());
 
         Link link = swordEntry.getLinks().next();
-        assertEquals("http://localhost:8080/sword/" + COLLECTION +"/test:1", link.getHref());
+        assertEquals("http://localhost:8080/sword/" + COLLECTION + "/test:1", link.getHref());
         assertEquals("edit", link.getRel());
     }
 
