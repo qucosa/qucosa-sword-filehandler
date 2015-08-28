@@ -106,11 +106,11 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         final String pid = deposit.getDepositID();
         final FedoraObject fedoraObject = new FedoraObject(pid);
 
-        fedoraObject.setDc(new DublinCore());
-
+        fedoraObject.setDc(metsContainer.getDublinCore());
         final SWORDEntry swordEntry = getSWORDEntry(deposit, serviceDocument, fedoraObject);
 
         if (!deposit.isNoOp()) { // Don't ingest if no-op is set
+            update(repository, pid, fedoraObject.getDc());
             updateIfPresent(repository, pid, metsContainer.getModsDatastream());
             updateAttachmentDatastreams(repository, pid, metsContainer.getFileDatastreams());
             updateOrAdd(repository, pid, metsContainer.getSlubInfoDatastream());
@@ -262,9 +262,13 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
 
     private void updateIfPresent(FedoraRepository repository, String pid, Datastream datastream) throws SWORDException {
         if (datastream != null) {
-            if (repository.hasDatastream(pid, datastream.getId())) {
-                repository.modifyDatastream(pid, datastream, null);
-            }
+            update(repository, pid, datastream);
+        }
+    }
+
+    private void update(FedoraRepository repository, String pid, Datastream datastream) throws SWORDException {
+        if (repository.hasDatastream(pid, datastream.getId())) {
+            repository.modifyDatastream(pid, datastream, null);
         }
     }
 
