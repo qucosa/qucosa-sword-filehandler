@@ -61,8 +61,8 @@
         </mets:mdWrap>
     </mets:dmdSec>
     <mets:amdSec ID="AMD_000">
-        <mets:rightsMD ID="RIGHTS_000">
-            <mets:mdWrap MDTYPE="OTHER" OTHERMDTYPE="SLUBRIGHTS" MIMETYPE="application/vnd.slub-info+xml">
+        <mets:techMD ID="TECH_000">
+            <mets:mdWrap MDTYPE="OTHER" OTHERMDTYPE="SLUBINFO" MIMETYPE="application/vnd.slub-info+xml">
                 <mets:xmlData>
                     <slub:info xmlns:slub="http://slub-dresden.de/">
                         <slub:submitter>
@@ -80,7 +80,7 @@
                     </slub:info>
                 </mets:xmlData>
             </mets:mdWrap>
-        </mets:rightsMD>
+        </mets:techMD>
     </mets:amdSec>
     <mets:fileSec>
         <mets:fileGrp USE="ORIGINAL">

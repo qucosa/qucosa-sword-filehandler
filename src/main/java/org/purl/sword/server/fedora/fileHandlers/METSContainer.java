@@ -56,7 +56,7 @@ public class METSContainer {
     private final XPathQuery XPATH_MODS = new XPathQuery(MODS_PREFIX);
     private final XPathQuery XPATH_QUCOSA = new XPathQuery(METS_DMDSEC_PREFIX + "/mets:mdWrap[@MDTYPE='OTHER' and @OTHERMDTYPE='QUCOSA-XML']/mets:xmlData/Opus");
     private final XPathQuery XPATH_RELATEDITEMS = new XPathQuery(MODS_PREFIX + "/mods:relatedItem");
-    private final XPathQuery XPATH_SLUB = new XPathQuery("/mets:mets/mets:amdSec/mets:rightsMD" + "/mets:mdWrap[@MDTYPE='OTHER' and @OTHERMDTYPE='SLUBRIGHTS']/mets:xmlData/slub:info");
+    private final XPathQuery XPATH_SLUB = new XPathQuery("/mets:mets/mets:amdSec/mets:techMD" + "/mets:mdWrap[@MDTYPE='OTHER' and @OTHERMDTYPE='SLUBINFO']/mets:xmlData/slub:info");
     private final XPathQuery XPATH_TITLE = new XPathQuery(MODS_PREFIX + "/mods:titleInfo/mods:title[1]");
     private final String md5;
     private final Document metsDocument;
