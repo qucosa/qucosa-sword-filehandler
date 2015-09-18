@@ -78,8 +78,9 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
 
         verify(mockFedoraRepository).ingest(argument.capture());
         DublinCore result = argument.getValue().getDc();
-        assertTrue("Should have identifier", result.getIdentifier().contains("urn:nbn:de:bsz:14-qucosa-32992"));
-        assertTrue("Should have identifier", result.getIdentifier().contains("322202922"));
+
+        assertTrue("Should have URN identifier", result.getIdentifier().contains("urn:nbn:de:bsz:14-qucosa-32992"));
+        assertTrue("Should have PPN identifier", result.getIdentifier().contains("ppn:322202922"));
     }
 
     @Test

@@ -61,7 +61,7 @@
                     <mods:accessCondition>Dieser Beitrag ist mit Zustimmung des Rechteinhabers frei zugänglich.
                     </mods:accessCondition>
                     <mods:identifier type="urn">urn:nbn:de:bsz:14-qucosa-32992</mods:identifier>
-                    <mods:identifier type="swb-ppn">322202922</mods:identifier>
+                    <mods:identifier type="ppn">322202922</mods:identifier>
                     <mods:relatedItem type="constituent"
                                       xlink:href="http://nbn-resolving.de/urn:nbn:de:bsz:14-qucosa-32825">
                         <mods:identifier type="urn">urn:nbn:de:bsz:14-qucosa-32825</mods:identifier>

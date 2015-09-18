@@ -44,13 +44,6 @@ public class XPathQuery {
         }
     }
 
-    public List<String> selectValues(Document doc) throws JDOMException {
-        final List<Element> els = selectNodes(doc);
-        return new LinkedList<String>() {{
-            for (Element e : els) add(e.getTextTrim());
-        }};
-    }
-
     public Element selectNode(Document doc) throws JDOMException {
         return (Element) xpath.selectSingleNode(doc);
     }

@@ -33,21 +33,22 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.purl.sword.server.fedora.fedoraObjects.State.INACTIVE;
 
 public class METSContainer {
 
+    public static final Pattern PATTERN = Pattern.compile("^[a-z][a-z0-9\\+\\.\\-]*\\:.*", Pattern.CASE_INSENSITIVE);
+
     private static final String DS_ID_SLUBINFO = "SLUB-INFO";
     private static final String DS_ID_SLUBINFO_LABEL = "SLUB Administrative Metadata";
-
     private static final String DS_ID_QUCOSAXML = "QUCOSA-XML";
     private static final String DS_ID_QUCOSAXML_LABEL = "Pristine Qucosa XML Metadata";
-
     private static final String DS_MODS_MIME_TYPE = "application/mods+xml";
     private static final String DS_ID_MODS = "MODS";
     private static final String DS_ID_MODS_LABEL = "Object Bibliographic Metadata";
-
     private static final String METS_DMDSEC_PREFIX = "/mets:mets/mets:dmdSec";
     private static final String MODS_PREFIX = METS_DMDSEC_PREFIX + "/mets:mdWrap[@MDTYPE='MODS']/mets:xmlData/mods:mods";
 
@@ -196,10 +197,22 @@ public class METSContainer {
 
     private List<String> getIdentifiers() {
         try {
-            return XPATH_IDENTIFIERS.selectValues(metsDocument);
+            final List<String> identifiers = new LinkedList<>();
+            final List<Element> elements = XPATH_IDENTIFIERS.selectNodes(metsDocument);
+            for (Element e : elements) {
+                final String type = e.getAttributeValue("type");
+                final String id = e.getTextTrim();
+                identifiers.add(hasProtocol(id) ? id : type + ":" + id);
+            }
+            return identifiers;
         } catch (JDOMException e) {
             return null;
         }
+    }
+
+    private boolean hasProtocol(String id) {
+        Matcher matcher = PATTERN.matcher(id);
+        return matcher.matches();
     }
 
     private Datastream getDatastream(XPathQuery query, String datastreamID, String datastreamLabel) throws SWORDException {
