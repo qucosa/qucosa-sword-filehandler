@@ -18,6 +18,7 @@ package org.purl.sword.server.fedora.fileHandlers;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.spi.LoggingEvent;
+import org.custommonkey.xmlunit.XMLAssert;
 import org.jdom.Attribute;
 import org.jdom.Element;
 import org.jdom.Namespace;
@@ -25,6 +26,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.purl.sword.base.SWORDEntry;
 import org.purl.sword.base.SWORDException;
+import org.purl.sword.server.fedora.JDomHelper;
 import org.purl.sword.server.fedora.baseExtensions.DepositCollection;
 import org.purl.sword.server.fedora.fedoraObjects.*;
 
@@ -99,6 +101,21 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
         assertEquals("Should be versionable", true, ds.isVersionable());
         assertEquals("Should have proper label", "SLUB Administrative Metadata", ds.getLabel());
     }
+
+    @Test
+    public void emits_rights_element_in_SlubInfo() throws Exception {
+        FileHandler fh = new QucosaMETSFileHandler();
+        ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
+
+        fh.ingestDeposit(buildDeposit(METS_FILE_FILEGROUPS), buildServiceDocument());
+
+        verify(mockFedoraRepository).ingest(argument.capture());
+        Datastream ds = getDatastream("SLUB-INFO", argument.getValue());
+
+        final String inXMLString = JDomHelper.makeString(((XMLInlineDatastream) ds).toXML());
+        XMLAssert.assertXpathExists("//slub:rights", inXMLString);
+    }
+
 
     @Test
     public void hasProperModsDatastream() throws Exception {

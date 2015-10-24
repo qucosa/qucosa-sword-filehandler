@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2015 Saxon State and University Library Dresden (SLUB)
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<mets:mets xmlns:mets="http://www.loc.gov/METS/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xlink="http://www.w3.org/1999/xlink"
+           OBJID="qucosa:1"
+           xsi:schemaLocation="http://www.loc.gov/METS/ http://www.loc.gov/standards/mets/mets.xsd">
+    <mets:dmdSec ID="DMD_000">
+        <mets:mdWrap MDTYPE="MODS">
+            <mets:xmlData>
+                <mods:mods xmlns:mods="http://www.loc.gov/mods/v3"
+                           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                           xsi:schemaLocation="http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-5.xsd">
+                    <mods:titleInfo lang="ger" usage="primary">
+                        <mods:title>Qucosa: Quality Content of Saxony</mods:title>
+                        <mods:subTitle>Das EFRE-Projekt Sächsischer Dokumentenserver</mods:subTitle>
+                    </mods:titleInfo>
+                    <mods:abstract lang="ger">Die sächsischen Hochschulbibliotheken verfügten bisher nur
+                        über eigene, auf die jeweilige Einrichtung beschränkte Hochschulschriftenserver. Qucosa, das der
+                        kostenlosen Publikation und dauerhaften Archivierung von elektronischen Diplomarbeiten,
+                        Dissertationen und anderen Veröffentlichungen dient, eröffnet den sächsischen
+                        Hochschulbibliotheken neue Perspektiven und bildet eines der Elemente einer „Digitalen
+                        Bibliothek“ in Sachsen. Bereits mehrere sächsische Hochschulen und Forschungsinstitute benutzen
+                        Qucosa zur Publizierung der eigenen Forschungsergebnisse. Auch nichtwissenschaftliche,
+                        staatliche Einrichtungen werden zukünftig ihre Schriften auf Qucosa im Volltext anbieten.
+                    </mods:abstract>
+                    <mods:name type="personal">
+                        <mods:namePart type="given">Roland</mods:namePart>
+                        <mods:namePart type="family">Pohl</mods:namePart>
+                        <mods:role>
+                            <mods:roleTerm authority="marcrelator" authorityURI="http://id.loc.gov/vocabulary/relators"
+                                           type="code" valueURI="http://id.loc.gov/vocabulary/relators/aut">aut
+                            </mods:roleTerm>
+                        </mods:role>
+                    </mods:name>
+                    <mods:language>
+                        <mods:languageTerm authority="iso639-2b" type="code">ger</mods:languageTerm>
+                    </mods:language>
+                    <mods:originInfo eventType="publication">
+                        <mods:publisher>Saechsische Landesbibliothek- Staats- und Universitaetsbibliothek Dresden
+                        </mods:publisher>
+                        <mods:place>
+                            <mods:placeTerm type="text">Dresden</mods:placeTerm>
+                        </mods:place>
+                        <mods:dateIssued encoding="iso8601">2010-04-19</mods:dateIssued>
+                    </mods:originInfo>
+                    <mods:originInfo eventType="distribution">
+                        <mods:publisher>SLUB Dresden</mods:publisher>
+                        <mods:place>
+                            <mods:placeTerm type="text">Dresden</mods:placeTerm>
+                        </mods:place>
+                        <mods:dateIssued encoding="iso8601" keyDate="yes">2010-04-19</mods:dateIssued>
+                        <mods:edition>[Electronic ed.]</mods:edition>
+                    </mods:originInfo>
+                    <mods:classification authority="ddc">020</mods:classification>
+                    <mods:classification authority="rvk">AN 90190</mods:classification>
+                    <mods:classification lang="ger">Qucosa</mods:classification>
+                    <mods:classification lang="ger">Dokumentenserver</mods:classification>
+                    <mods:classification lang="ger">Open Access</mods:classification>
+                    <mods:physicalDescription>
+                        <mods:digitalOrigin>born digital</mods:digitalOrigin>
+                    </mods:physicalDescription>
+                    <mods:typeOfResource>text</mods:typeOfResource>
+                    <mods:accessCondition>Dieser Beitrag ist mit Zustimmung des Rechteinhabers frei zugänglich.
+                    </mods:accessCondition>
+                    <mods:identifier type="urn">urn:nbn:de:bsz:14-qucosa-32992</mods:identifier>
+                    <mods:identifier type="ppn">322202922</mods:identifier>
+                    <mods:relatedItem type="constituent"
+                                      xlink:href="http://nbn-resolving.de/urn:nbn:de:bsz:14-qucosa-32825">
+                        <mods:identifier type="urn">urn:nbn:de:bsz:14-qucosa-32825</mods:identifier>
+                        <mods:titleInfo>
+                            <mods:title>BIS - Das Magazin der Bibliotheken in Sachsen</mods:title>
+                            <mods:partNumber>3(2010)1, S. 26 - 27</mods:partNumber>
+                        </mods:titleInfo>
+                    </mods:relatedItem>
+                </mods:mods>
+            </mets:xmlData>
+        </mets:mdWrap>
+    </mets:dmdSec>
+    <mets:dmdSec ID="DMD_001">
+        <mets:mdWrap MDTYPE="OTHER" OTHERMDTYPE="QUCOSA-XML" MIMETYPE="application/xml">
+            <mets:xmlData>
+                <Opus version="2.0">
+                    <Opus_Document>
+                        <CompletedDate>
+                            <Year>2010</Year>
+                            <Month>4</Month>
+                            <Day>19</Day>
+                            <Hour>0</Hour>
+                            <Minute>00</Minute>
+                            <Second>00</Second>
+                            <Timezone>GMT-2</Timezone>
+                        </CompletedDate>
+                        <CompletedYear>0000</CompletedYear>
+                        <ContributingCorporation/>
+                        <CreatingCorporation/>
+                        <DateAccepted/>
+                        <Edition/>
+                        <Issue/>
+                        <Language>ger</Language>
+                        <NonInstituteAffiliation/>
+                        <PageFirst>0</PageFirst>
+                        <PageLast>0</PageLast>
+                        <PageNumber>0</PageNumber>
+                        <PublicationVersion/>
+                        <PublishedDate/>
+                        <PublishedYear/>
+                        <PublisherName>Saechsische Landesbibliothek- Staats- und Universitaetsbibliothek Dresden
+                        </PublisherName>
+                        <PublisherPlace>Dresden</PublisherPlace>
+                        <PublisherAddress>Zellescher Weg 18, 01069 Dresden, Germany</PublisherAddress>
+                        <PublisherUniversity/>
+                        <Reviewed/>
+                        <ServerDateModified>
+                            <Year>2010</Year>
+                            <Month>11</Month>
+                            <Day>25</Day>
+                            <Hour>10</Hour>
+                            <Minute>33</Minute>
+                            <Second>24</Second>
+                            <Timezone>GMT-1</Timezone>
+                        </ServerDateModified>
+                        <ServerDatePublished>
+                            <Year>2010</Year>
+                            <Month>4</Month>
+                            <Day>13</Day>
+                            <Hour>9</Hour>
+                            <Minute>44</Minute>
+                            <Second>39</Second>
+                            <Timezone>GMT-2</Timezone>
+                        </ServerDatePublished>
+                        <ServerDateUnlocking/>
+                        <ServerDateValid/>
+                        <ServerState>published</ServerState>
+                        <Source>BIS - Das Magazin der Bibliotheken in Sachsen 3(2010)1, S. 26 - 27</Source>
+                        <Type>article</Type>
+                        <VgWortOpenKey/>
+                        <Volume/>
+                        <FisExport>0</FisExport>
+                        <TableOfContent/>
+                        <TitleMain>
+                            <Language>ger</Language>
+                            <Value>Qucosa: Quality Content of Saxony</Value>
+                            <SortOrder/>
+                        </TitleMain>
+                        <TitleAbstract>
+                            <Language>ger</Language>
+                            <Value>Die sächsischen Hochschulbibliotheken verfügten bisher nur über eigene, auf die
+                                jeweilige
+                                Einrichtung beschränkte Hochschulschriftenserver. Qucosa, das der kostenlosen
+                                Publikation
+                                und dauerhaften Archivierung von elektronischen Diplomarbeiten, Dissertationen und
+                                anderen
+                                Veröffentlichungen dient, eröffnet den sächsischen Hochschulbibliotheken neue
+                                Perspektiven
+                                und bildet eines der Elemente einer „Digitalen Bibliothek“ in Sachsen. Bereits mehrere
+                                sächsische Hochschulen und Forschungsinstitute benutzen Qucosa zur Publizierung der
+                                eigenen
+                                Forschungsergebnisse. Auch nichtwissenschaftliche, staatliche Einrichtungen werden
+                                zukünftig
+                                ihre Schriften auf Qucosa im Volltext anbieten.
+                            </Value>
+                            <SortOrder/>
+                        </TitleAbstract>
+                        <TitleSub>
+                            <Language>ger</Language>
+                            <Value>Das EFRE-Projekt Sächsischer Dokumentenserver</Value>
+                            <SortOrder/>
+                        </TitleSub>
+                        <IdentifierUrn>
+                            <Value>urn:nbn:de:bsz:14-qucosa-32992</Value>
+                        </IdentifierUrn>
+                        <IdentifierPpn>
+                            <Value>322202922</Value>
+                        </IdentifierPpn>
+                        <ReferenceUrn>
+                            <Value>urn:nbn:de:bsz:14-qucosa-32825</Value>
+                            <Label/>
+                            <Relation>issue</Relation>
+                            <SortOrder>026</SortOrder>
+                        </ReferenceUrn>
+                        <PersonAuthor>
+                            <AcademicTitle/>
+                            <DateOfBirth/>
+                            <PlaceOfBirth/>
+                            <Gender>m</Gender>
+                            <Phone/>
+                            <Email/>
+                            <FirstName>Roland</FirstName>
+                            <LastName>Pohl</LastName>
+                            <Role>author</Role>
+                            <SortOrder>0</SortOrder>
+                            <AllowEmailContact>0</AllowEmailContact>
+                        </PersonAuthor>
+                        <PersonSubmitter>
+                            <AcademicTitle/>
+                            <DateOfBirth/>
+                            <PlaceOfBirth/>
+                            <Gender/>
+                            <Phone/>
+                            <Email>thomas.heide@slub-dresden.de</Email>
+                            <FirstName/>
+                            <LastName>Thomas Heide</LastName>
+                            <Role>submitter</Role>
+                            <SortOrder>0</SortOrder>
+                            <AllowEmailContact>0</AllowEmailContact>
+                        </PersonSubmitter>
+                        <SubjectDdc>
+                            <Language/>
+                            <Type>ddc</Type>
+                            <Value>020</Value>
+                            <ExternalKey/>
+                        </SubjectDdc>
+                        <SubjectRvk>
+                            <Language/>
+                            <Type>rvk</Type>
+                            <Value>AN 80190</Value>
+                            <ExternalKey/>
+                        </SubjectRvk>
+                        <SubjectUncontrolled>
+                            <Language>ger</Language>
+                            <Type>uncontrolled</Type>
+                            <Value>Qucosa, Dokumentenserver, open access</Value>
+                            <ExternalKey/>
+                        </SubjectUncontrolled>
+                        <SubjectUncontrolled>
+                            <Language>eng</Language>
+                            <Type>uncontrolled</Type>
+                            <Value>documents server</Value>
+                            <ExternalKey/>
+                        </SubjectUncontrolled>
+                        <File id="702">
+                            <PathName>26-27.pdf</PathName>
+                            <SortOrder>0</SortOrder>
+                            <Label>Volltext (PDF)</Label>
+                            <FileType/>
+                            <MimeType>application/pdf</MimeType>
+                            <Language/>
+                            <TempFile/>
+                            <FileSize>855199</FileSize>
+                            <HashValue>
+                                <Type>md5</Type>
+                                <Value>ce424bb36f35e4119d0cd7bbcfce9e0f</Value>
+                            </HashValue>
+                            <HashValue>
+                                <Type>sha512</Type>
+                                <Value>
+                                    c82d824eae2f96c2848fc182ada8c8786103242dd87df7e96fd756ad9f54f417334f11384eb15a7d7f5ad785d5348b9851a5bb54fa8830ec1b2058b2d72224ef
+                                </Value>
+                            </HashValue>
+                            <OaiExport>1</OaiExport>
+                            <FrontdoorVisible>1</FrontdoorVisible>
+                        </File>
+                        <Organisation>
+                            <Type>other</Type>
+                            <Address>Dresden</Address>
+                            <Role>publisher</Role>
+                            <TudFisKeyFaculty>0</TudFisKeyFaculty>
+                            <TudFisKeyChair>0</TudFisKeyChair>
+                            <FreeSubmission>0</FreeSubmission>
+                            <FirstLevelName>SLUB Dresden</FirstLevelName>
+                            <SecondLevelName>Allgemein</SecondLevelName>
+                            <ThirdLevelName/>
+                            <FourthLevelName/>
+                            <FifthLevelName/>
+                            <SixthLevelName/>
+                        </Organisation>
+                        <DocumentId>3299</DocumentId>
+                    </Opus_Document>
+                </Opus>
+            </mets:xmlData>
+        </mets:mdWrap>
+    </mets:dmdSec>
+    <mets:amdSec ID="AMD_000">
+        <mets:techMD ID="TECH_000">
+            <mets:mdWrap MDTYPE="OTHER" OTHERMDTYPE="SLUBINFO" MIMETYPE="application/vnd.slub-info+xml">
+                <mets:xmlData>
+                    <slub:info xmlns:slub="http://slub-dresden.de/">
+                        <slub:submitter>
+                            <slub:name>Frau Administrator</slub:name>
+                            <slub:contact>mailto:qucosa.admin@slub-dresden.de</slub:contact>
+                        </slub:submitter>
+                        <slub:project>OpenAire Project Name</slub:project>
+                        <slub:client>Mandant</slub:client>
+                        <slub:rights>
+                            <slub:license valueURI="URI der Lizenz">Lizenzangabe</slub:license>
+                            <slub:embargo encoding="iso8601">2014-11-26</slub:embargo>
+                            <slub:accessDNB>true</slub:accessDNB>
+                            <slub:accessPOD>true</slub:accessPOD>
+                        </slub:rights>
+                    </slub:info>
+                </mets:xmlData>
+            </mets:mdWrap>
+        </mets:techMD>
+    </mets:amdSec>
+
+    <mets:fileSec>
+
+        <mets:fileGrp USE="ORIGINAL">
+            <mets:file ID="ATT-0" MIMETYPE="application/pdf">
+                <mets:FLocat xmlns:xlin="http://www.w3.org/1999/xlink"
+                             LOCTYPE="URL"
+                             xlin:href="file:/Attachment.pdf"
+                             xlin:title="Attachment"
+                        />
+            </mets:file>
+        </mets:fileGrp>
+
+        <mets:fileGrp USE="DOWNLOAD">
+            <mets:file ID="ATT-1" MIMETYPE="application/pdf">
+                <mets:FLocat xmlns:xlin="http://www.w3.org/1999/xlink"
+                             LOCTYPE="URL"
+                             xlin:href="file:/Attachment.pdf"
+                             xlin:title="Attachment"
+                        />
+            </mets:file>
+        </mets:fileGrp>
+
+    </mets:fileSec>
+    <mets:structMap>
+        <mets:div DMDID="DMD_000" TYPE="article">
+            <mets:fptr FILEID="ATT-1"/>
+        </mets:div>
+    </mets:structMap>
+</mets:mets>

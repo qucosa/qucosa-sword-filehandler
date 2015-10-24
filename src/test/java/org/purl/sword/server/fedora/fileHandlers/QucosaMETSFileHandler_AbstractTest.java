@@ -18,6 +18,8 @@ package org.purl.sword.server.fedora.fileHandlers;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Appender;
 import org.apache.log4j.LogManager;
+import org.custommonkey.xmlunit.SimpleNamespaceContext;
+import org.custommonkey.xmlunit.XMLUnit;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.Namespace;
@@ -42,6 +44,7 @@ import org.purl.sword.server.fedora.utils.XMLProperties;
 import java.io.InputStream;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.UUID;
 
 import static org.mockito.Mockito.mock;
@@ -56,6 +59,24 @@ import static org.powermock.api.support.membermodification.MemberMatcher.method;
         QucosaMETSFileHandler.class})
 abstract class QucosaMETSFileHandler_AbstractTest {
 
+    public static final String NS_MODS_V3 = "http://www.loc.gov/mods/v3";
+    public static final String NS_SLUB = "http://slub-dresden.de/";
+    public static final String NS_FOAF = "http://xmlns.com/foaf/0.1/";
+    public static final String NS_RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+    public static final String NS_XLINK = "http://www.w3.org/1999/xlink";
+
+    static {
+        XMLUnit.setXpathNamespaceContext(new SimpleNamespaceContext(
+                new HashMap() {{
+                    put("mods", NS_MODS_V3);
+                    put("slub", NS_SLUB);
+                    put("foaf", NS_FOAF);
+                    put("rdf", NS_RDF);
+                    put("xlink", NS_XLINK);
+                }}
+        ));
+    }
+
     public static final String MEDIA_TYPE = "application/vnd.qucosa.mets+xml";
     public static final String COLLECTION = "collection:test";
     public static final String USERNAME = "fedoraAdmin";
@@ -67,6 +88,7 @@ abstract class QucosaMETSFileHandler_AbstractTest {
     public static final String METS_FILE_ADD_DS = "/mets_add_ds.xml";
     public static final String METS_FILE_ALLREFS = "/mets_all_references.xml";
     public static final String METS_FILE_DELETE_DS = "/mets_delete_ds.xml";
+    public static final String METS_FILE_FILEGROUPS = "/mets_download_filegroup.xml";
     public static final String METS_FILE_UPDATE = "/mets_update.xml";
     public static final String METS_FILE_CHECKSUM = "/mets_file_checksum.xml";
     public static final String METS_FILE_UPDATE_MD5 = "394c8595b013924333c38a513798e197";
