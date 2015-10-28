@@ -310,7 +310,7 @@
     <mets:fileSec>
 
         <mets:fileGrp USE="ORIGINAL">
-            <mets:file ID="ATT-0" MIMETYPE="application/pdf">
+            <mets:file ID="ATT-0" MIMETYPE="application/pdf" USE="ARCHIVE">
                 <mets:FLocat xmlns:xlin="http://www.w3.org/1999/xlink"
                              LOCTYPE="URL"
                              xlin:href="file:/Attachment.pdf"

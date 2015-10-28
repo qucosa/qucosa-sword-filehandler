@@ -16,7 +16,10 @@
 
 package org.purl.sword.server.fedora.fileHandlers;
 
+import org.apache.commons.collections.Closure;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.log4j.Logger;
+import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.purl.sword.base.SWORDEntry;
@@ -28,7 +31,10 @@ import org.purl.sword.server.fedora.fedoraObjects.*;
 import java.io.File;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import static org.purl.sword.server.fedora.fedoraObjects.State.DELETED;
 
@@ -38,8 +44,11 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
     private static final Logger log = Logger.getLogger(QucosaMETSFileHandler.class);
     private static final String DEFAULT_COLLECTION_PID = "qucosa:all";
 
-    public QucosaMETSFileHandler() {
+    private final XPathQuery XPATH_ATTACHMENTS;
+
+    public QucosaMETSFileHandler() throws JDOMException {
         super("application/vnd.qucosa.mets+xml", "");
+        XPATH_ATTACHMENTS = new XPathQuery("slub:attachment");
     }
 
     @Override
@@ -49,9 +58,11 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         final String pid = obtainPID(deposit, repository);
         final FedoraObject fedoraObject = new FedoraObject(pid);
 
-        List<Datastream> datastreams;
-        datastreams = metsContainer.getDatastreams();
+        final List<Datastream> datastreams = metsContainer.getDatastreams();
+        final List<Datastream> fileDatastreams = findDatastreams("ATT-", datastreams);
         ensureValidDSIds(datastreams);
+
+        augmentSlubInfoDatastream(findDatastream("SLUB-INFO", datastreams), fileDatastreams);
 
         fedoraObject.setIdentifiers(getIdentifiers(deposit));
         fedoraObject.setRelsext(buildRelationships(deposit, metsContainer));
@@ -111,9 +122,15 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
 
         if (!deposit.isNoOp()) { // Don't ingest if no-op is set
             update(repository, pid, fedoraObject.getDc());
+            final List<Datastream> fileDatastreams = metsContainer.getFileDatastreams();
+            final Datastream slubInfoDatastream = metsContainer.getSlubInfoDatastream();
+
             updateIfPresent(repository, pid, metsContainer.getModsDatastream());
-            updateAttachmentDatastreams(repository, pid, metsContainer.getFileDatastreams());
-            updateOrAdd(repository, pid, metsContainer.getSlubInfoDatastream());
+            updateAttachmentDatastreams(repository, pid, fileDatastreams);
+
+            augmentSlubInfoDatastream(slubInfoDatastream, fileDatastreams);
+
+            updateOrAdd(repository, pid, slubInfoDatastream);
             updateOrAdd(repository, pid, metsContainer.getQucosaXmlDatastream());
             delete(metsContainer.getTemporayFiles());
         }
@@ -280,6 +297,73 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
                 repository.addDatastream(pid, datastream, null);
             }
         }
+    }
+
+    private void augmentSlubInfoDatastream(Datastream slubInfo, List<Datastream> attachmentDatastreams) throws SWORDException {
+        if (slubInfo == null) {
+            return;
+        }
+
+        Document info = ((XMLInlineDatastream) slubInfo).toXML();
+
+        Element rights = info.getRootElement().getChild("rights", Namespaces.SLUB);
+        if (rights == null) {
+            rights = new Element("rights", Namespaces.SLUB);
+            info.getRootElement().addContent(rights);
+        }
+
+        final List<Element> attachmentElements;
+        try {
+            attachmentElements = XPATH_ATTACHMENTS.selectNodes(rights);
+            Map<String, Element> attachmentElementMap = new HashMap<String, Element>() {{
+                CollectionUtils.forAllDo(
+                        attachmentElements,
+                        new Closure() {
+                            @Override
+                            public void execute(Object input) {
+                                Element item = (Element) input;
+                                put(item.getAttributeValue("slub:ref", Namespaces.SLUB), item);
+                            }
+                        });
+            }};
+            for (Datastream attachmentDatastream : attachmentDatastreams) {
+                if (attachmentDatastream instanceof AugmentedDatastream) {
+                    AugmentedDatastream augmentedDatastream = (AugmentedDatastream) attachmentDatastream;
+                    final String attachmentDatastreamId = augmentedDatastream.getId();
+                    Element attachment = attachmentElementMap.get(attachmentDatastreamId);
+                    if (attachment == null) {
+                        attachment = new Element("attachment", Namespaces.SLUB);
+                        rights.addContent(attachment);
+                    }
+                    attachment.setAttribute("ref", attachmentDatastreamId, Namespaces.SLUB);
+                    attachment.setAttribute("hasArchivalValue", yesno(augmentedDatastream.isHasArchivalValue()), Namespaces.SLUB);
+                    attachment.setAttribute("isDownloadable", yesno(augmentedDatastream.isDownloadable()), Namespaces.SLUB);
+                }
+            }
+        } catch (JDOMException e) {
+            throw new SWORDException("Error augmenting SLUB-INFO with attachment options", e);
+        }
+    }
+
+    private String yesno(boolean b) {
+        return b ? "yes" : "no";
+    }
+
+    private List<Datastream> findDatastreams(String dsidPrefix, List<Datastream> datastreams) {
+        final LinkedList<Datastream> result = new LinkedList<>();
+        for (Datastream ds : datastreams) {
+            if (ds.getId().startsWith(dsidPrefix)) {
+                result.add(ds);
+            }
+        }
+        return result;
+    }
+
+    private Datastream findDatastream(String dsid, List<Datastream> datastreams) {
+        for (Datastream ds : datastreams) {
+            if (ds.getId().equals(dsid)) return ds;
+        }
+        return null;
     }
 
 }

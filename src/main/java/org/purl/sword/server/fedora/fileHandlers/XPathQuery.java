@@ -48,11 +48,24 @@ public class XPathQuery {
         return (Element) xpath.selectSingleNode(doc);
     }
 
+    public Element selectNode(Element element) throws JDOMException {
+        return (Element) xpath.selectSingleNode(element);
+    }
+
     public List<Element> selectNodes(Document doc) throws JDOMException {
+        return getElements(doc);
+    }
+
+    public List<Element> selectNodes(Element element) throws JDOMException {
+        return getElements(element);
+    }
+
+    private List<Element> getElements(Object context) throws JDOMException {
         LinkedList<Element> resultList = new LinkedList<>();
-        for (Object o : xpath.selectNodes(doc)) {
+        for (Object o : xpath.selectNodes(context)) {
             resultList.add((Element) o);
         }
         return resultList;
     }
 }
+

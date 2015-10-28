@@ -52,7 +52,7 @@ public class METSContainer {
     private static final String METS_DMDSEC_PREFIX = "/mets:mets/mets:dmdSec";
     private static final String MODS_PREFIX = METS_DMDSEC_PREFIX + "/mets:mdWrap[@MDTYPE='MODS']/mets:xmlData/mods:mods";
 
-    private final XPathQuery XPATH_FILES = new XPathQuery("/mets:mets/mets:fileSec/mets:fileGrp[@USE='ORIGINAL']/mets:file");
+    private final XPathQuery XPATH_FILES = new XPathQuery("/mets:mets/mets:fileSec/mets:fileGrp/mets:file");
     private final XPathQuery XPATH_IDENTIFIERS = new XPathQuery(MODS_PREFIX + "/mods:identifier");
     private final XPathQuery XPATH_MODS = new XPathQuery(MODS_PREFIX);
     private final XPathQuery XPATH_QUCOSA = new XPathQuery(METS_DMDSEC_PREFIX + "/mets:mdWrap[@MDTYPE='OTHER' and @OTHERMDTYPE='QUCOSA-XML']/mets:xmlData/Opus");
@@ -121,28 +121,31 @@ public class METSContainer {
         List<Datastream> datastreamList = new LinkedList<>();
         try {
             final List<Element> fileElements = XPATH_FILES.selectNodes(metsDocument);
-            for (Element e : fileElements) {
-                final String id = validateAndReturn("file ID", e.getAttributeValue("ID"));
+            for (Element fileElement : fileElements) {
+                final String id = validateAndReturn("file ID", fileElement.getAttributeValue("ID"));
 
-                if (isADeleteRequest(e)) {
+                if (isADeleteRequest(fileElement)) {
                     datastreamList.add(new VoidDatastream(id));
                 } else {
-                    final Element fLocat = validateAndReturn("FLocat element", e.getChild("FLocat", Namespaces.METS));
+                    final Element fLocat = validateAndReturn("FLocat element", fileElement.getChild("FLocat", Namespaces.METS));
                     final String href = validateAndReturn("file content URL", fLocat.getAttributeValue("href", Namespaces.XLINK));
                     final URI uri = new URI(href);
                     final boolean isFile = uri.getScheme().equals("file");
-                    final String mimetype = validateAndReturn("mime type", e.getAttributeValue("MIMETYPE"));
+                    final String mimetype = validateAndReturn("mime type", fileElement.getAttributeValue("MIMETYPE"));
 
                     Datastream ds = buildDatastream(id, fLocat, href, mimetype, isFile);
 
-                    String digestType = emptyIfNull(e.getAttributeValue("CHECKSUMTYPE"));
-                    String digest = emptyIfNull(e.getAttributeValue("CHECKSUM"));
+                    String digestType = emptyIfNull(fileElement.getAttributeValue("CHECKSUMTYPE"));
+                    String digest = emptyIfNull(fileElement.getAttributeValue("CHECKSUM"));
                     if (!(digestType.isEmpty() || digest.isEmpty())) {
                         ds.setDigestType(digestType);
                         ds.setDigest(digest);
                     }
 
-                    datastreamList.add(ds);
+                    final boolean hasArchivalValue = "ARCHIVE".equals(fileElement.getAttributeValue("USE"));
+                    final boolean isDownloadable = "DOWNLOAD".equals(fileElement.getParentElement().getAttributeValue("USE"));
+
+                    datastreamList.add(new AugmentedDatastream(ds, hasArchivalValue, isDownloadable));
                 }
             }
 

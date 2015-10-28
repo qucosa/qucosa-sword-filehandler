@@ -111,11 +111,33 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
 
         verify(mockFedoraRepository).ingest(argument.capture());
         Datastream ds = getDatastream("SLUB-INFO", argument.getValue());
-
         final String inXMLString = JDomHelper.makeString(((XMLInlineDatastream) ds).toXML());
+
         XMLAssert.assertXpathExists("//slub:rights", inXMLString);
     }
 
+    @Test
+    public void emits_attachment_for_each_file_SlubInfo() throws Exception {
+        FileHandler fh = new QucosaMETSFileHandler();
+        ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
+
+        fh.ingestDeposit(buildDeposit(METS_FILE_FILEGROUPS), buildServiceDocument());
+
+        verify(mockFedoraRepository).ingest(argument.capture());
+        Datastream ds = getDatastream("SLUB-INFO", argument.getValue());
+        final String inXMLString = JDomHelper.makeString(((XMLInlineDatastream) ds).toXML());
+
+        System.out.println(inXMLString);
+
+        XMLAssert.assertXpathExists("//slub:rights/slub:attachment[" +
+                "@slub:ref='ATT-0' and " +
+                "@slub:hasArchivalValue='yes' and " +
+                "@slub:isDownloadable='no']", inXMLString);
+        XMLAssert.assertXpathExists("//slub:rights/slub:attachment[" +
+                "@slub:ref='ATT-1' and " +
+                "@slub:hasArchivalValue='no' and " +
+                "@slub:isDownloadable='yes']", inXMLString);
+    }
 
     @Test
     public void hasProperModsDatastream() throws Exception {
@@ -175,7 +197,8 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
         fh.ingestDeposit(buildDeposit(METS_FILE_OK), buildServiceDocument());
 
         verify(mockFedoraRepository).ingest(argument.capture());
-        LocalDatastream lds = (LocalDatastream) getDatastream("ATT-1", argument.getValue());
+        final Datastream datastream = getDatastream("ATT-1", argument.getValue());
+        LocalDatastream lds = (LocalDatastream) ((AugmentedDatastream) datastream).getWrappedDatastream();
         assertFalse("Should not delete source file", lds.isCleanup());
     }
 
@@ -219,7 +242,7 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
         assertEquals("Should be active", State.ACTIVE, ds.getState());
         assertEquals("Should be versionable", true, ds.isVersionable());
         assertEquals("Should have proper label", "Attachment", ds.getLabel());
-        assertTrue("Should be ManagedDatastream", ds instanceof ManagedDatastream);
+        assertTrue("Should be ManagedDatastream", ((AugmentedDatastream) ds).getWrappedDatastream() instanceof ManagedDatastream);
     }
 
     @Test
