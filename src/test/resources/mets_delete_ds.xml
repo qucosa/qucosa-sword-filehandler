@@ -21,6 +21,22 @@
       DIFF:     Removed <mets:amdSec> and <mets:dmdSec> compared to mets_ok.xml
       USE CASE: Deleting a datastream
     -->
+
+    <mets:amdSec ID="AMD_000">
+        <mets:techMD ID="TECH_000">
+            <mets:mdWrap MDTYPE="OTHER" OTHERMDTYPE="SLUBINFO" MIMETYPE="application/vnd.slub-info+xml">
+                <mets:xmlData>
+                    <slub:info xmlns:slub="http://slub-dresden.de/">
+                        <slub:rights>
+                            <!-- This should get removed by the update process -->
+                            <slub:attachment slub:ref="ATT-1" slub:hasArchivalValue="no" slub:isDownloadable="yes" />
+                        </slub:rights>
+                    </slub:info>
+                </mets:xmlData>
+            </mets:mdWrap>
+        </mets:techMD>
+    </mets:amdSec>
+
     <mets:dmdSec ID="DMD_000"/>
     <mets:fileSec>
         <mets:fileGrp USE="ORIGINAL">

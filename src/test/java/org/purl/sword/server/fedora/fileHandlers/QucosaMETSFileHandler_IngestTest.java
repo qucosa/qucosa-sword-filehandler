@@ -117,7 +117,7 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
     }
 
     @Test
-    public void emits_attachment_for_each_file_SlubInfo() throws Exception {
+    public void emits_attachment_for_each_file_in_SlubInfo() throws Exception {
         FileHandler fh = new QucosaMETSFileHandler();
         ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
 
@@ -126,8 +126,6 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
         verify(mockFedoraRepository).ingest(argument.capture());
         Datastream ds = getDatastream("SLUB-INFO", argument.getValue());
         final String inXMLString = JDomHelper.makeString(((XMLInlineDatastream) ds).toXML());
-
-        System.out.println(inXMLString);
 
         XMLAssert.assertXpathExists("//slub:rights/slub:attachment[" +
                 "@slub:ref='ATT-0' and " +

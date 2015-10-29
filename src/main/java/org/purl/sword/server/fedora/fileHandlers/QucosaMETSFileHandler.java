@@ -346,6 +346,10 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
                     attachment.setAttribute("ref", attachmentDatastreamId, Namespaces.SLUB);
                     attachment.setAttribute("hasArchivalValue", yesno(augmentedDatastream.isHasArchivalValue()), Namespaces.SLUB);
                     attachment.setAttribute("isDownloadable", yesno(augmentedDatastream.isDownloadable()), Namespaces.SLUB);
+                } else if (attachmentDatastream instanceof VoidDatastream) {
+                    rights.removeContent(
+                            new XPathQuery("slub:attachment[@slub:ref='" + attachmentDatastream.getId() + "']")
+                                    .selectNode(rights));
                 }
             }
         } catch (JDOMException e) {
