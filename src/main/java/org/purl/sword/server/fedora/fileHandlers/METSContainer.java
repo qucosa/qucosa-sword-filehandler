@@ -105,7 +105,7 @@ public class METSContainer {
         addIfNotNull(resultList, getSlubInfoDatastream());
         addIfNotNull(resultList, getQucosaXmlDatastream());
         addIfNotNull(resultList, getModsDatastream());
-        addIfNotNull(resultList, getFileDatastreams());
+        addIfNotNull(resultList, getAugmentedFileDatastreams());
         return resultList;
     }
 
@@ -117,7 +117,7 @@ public class METSContainer {
     }
 
 
-    public List<Datastream> getFileDatastreams() throws SWORDException {
+    public List<Datastream> getAugmentedFileDatastreams() throws SWORDException {
         List<Datastream> datastreamList = new LinkedList<>();
         try {
             final List<Element> fileElements = XPATH_FILES.selectNodes(metsDocument);

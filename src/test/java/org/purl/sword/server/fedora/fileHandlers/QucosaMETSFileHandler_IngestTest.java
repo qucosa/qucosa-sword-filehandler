@@ -196,7 +196,7 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
 
         verify(mockFedoraRepository).ingest(argument.capture());
         final Datastream datastream = getDatastream("ATT-1", argument.getValue());
-        LocalDatastream lds = (LocalDatastream) ((AugmentedDatastream) datastream).getWrappedDatastream();
+        LocalDatastream lds = (LocalDatastream) datastream;
         assertFalse("Should not delete source file", lds.isCleanup());
     }
 
@@ -240,7 +240,7 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
         assertEquals("Should be active", State.ACTIVE, ds.getState());
         assertEquals("Should be versionable", true, ds.isVersionable());
         assertEquals("Should have proper label", "Attachment", ds.getLabel());
-        assertTrue("Should be ManagedDatastream", ((AugmentedDatastream) ds).getWrappedDatastream() instanceof ManagedDatastream);
+        assertTrue("Should be ManagedDatastream", ds instanceof ManagedDatastream);
     }
 
     @Test

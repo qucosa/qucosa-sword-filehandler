@@ -61,6 +61,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         final List<Datastream> datastreams = metsContainer.getDatastreams();
         ensureValidDSIds(datastreams);
         ensureAugmentedSlubInfoDatastream(datastreams);
+        removeAugmentationWrapperFrom(datastreams);
 
         fedoraObject.setIdentifiers(getIdentifiers(deposit));
         fedoraObject.setRelsext(buildRelationships(deposit, metsContainer));
@@ -76,6 +77,15 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         }
 
         return swordEntry;
+    }
+
+    private void removeAugmentationWrapperFrom(List<Datastream> datastreams) {
+        for (int i = 0; i < datastreams.size(); i++) {
+            Datastream ds = datastreams.get(i);
+            if (ds instanceof AugmentedDatastream) {
+                datastreams.set(i, ((AugmentedDatastream) ds).getWrappedDatastream());
+            }
+        }
     }
 
     /**
