@@ -16,6 +16,8 @@
 
 package org.purl.sword.server.fedora.fileHandlers;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Predicate;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.purl.sword.atom.Link;
@@ -26,6 +28,7 @@ import org.purl.sword.server.fedora.fedoraObjects.Datastream;
 import org.purl.sword.server.fedora.fedoraObjects.State;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
@@ -155,11 +158,18 @@ public class QucosaMETSFileHandler_UpdateTest extends QucosaMETSFileHandler_Abst
 
         fh.updateDeposit(depositCollection, buildServiceDocument());
 
-        verify(mockFedoraRepository).addDatastream(
+        verify(mockFedoraRepository, atLeastOnce()).addDatastream(
                 eq("test:1"),
                 argument.capture(),
                 anyString());
-        assertEquals("ATT-2", argument.getValue().getId());
+
+        assertNotNull("Expected call to add `ATT-2` datastream",
+                CollectionUtils.find(argument.getAllValues(), new Predicate() {
+                    @Override
+                    public boolean evaluate(Object o) {
+                        return ((Datastream) o).getId().equals("ATT-2");
+                    }
+                }));
     }
 
     @Test

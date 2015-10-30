@@ -42,8 +42,8 @@ public class METSContainer {
 
     public static final Pattern PATTERN = Pattern.compile("^[a-z][a-z0-9\\+\\.\\-]*\\:.*", Pattern.CASE_INSENSITIVE);
 
-    private static final String DS_ID_SLUBINFO = "SLUB-INFO";
-    private static final String DS_ID_SLUBINFO_LABEL = "SLUB Administrative Metadata";
+    public static final String DS_ID_SLUBINFO = "SLUB-INFO";
+    public static final String DS_ID_SLUBINFO_LABEL = "SLUB Administrative Metadata";
     private static final String DS_ID_QUCOSAXML = "QUCOSA-XML";
     private static final String DS_ID_QUCOSAXML_LABEL = "Pristine Qucosa XML Metadata";
     private static final String DS_MODS_MIME_TYPE = "application/mods+xml";

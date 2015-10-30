@@ -59,10 +59,8 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         final FedoraObject fedoraObject = new FedoraObject(pid);
 
         final List<Datastream> datastreams = metsContainer.getDatastreams();
-        final List<Datastream> fileDatastreams = findDatastreams("ATT-", datastreams);
         ensureValidDSIds(datastreams);
-
-        augmentSlubInfoDatastream(findDatastream("SLUB-INFO", datastreams), fileDatastreams);
+        ensureAugmentedSlubInfoDatastream(datastreams);
 
         fedoraObject.setIdentifiers(getIdentifiers(deposit));
         fedoraObject.setRelsext(buildRelationships(deposit, metsContainer));
@@ -122,14 +120,14 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
 
         if (!deposit.isNoOp()) { // Don't ingest if no-op is set
             update(repository, pid, fedoraObject.getDc());
-            final List<Datastream> fileDatastreams = metsContainer.getFileDatastreams();
-            final Datastream slubInfoDatastream = metsContainer.getSlubInfoDatastream();
+            final List<Datastream> datastreams = metsContainer.getDatastreams();
+            ensureAugmentedSlubInfoDatastream(datastreams);
+
+            final List<Datastream> fileDatastreams = findDatastreams("ATT-", datastreams);
+            final Datastream slubInfoDatastream = findDatastream(METSContainer.DS_ID_SLUBINFO, datastreams);
 
             updateIfPresent(repository, pid, metsContainer.getModsDatastream());
             updateAttachmentDatastreams(repository, pid, fileDatastreams);
-
-            augmentSlubInfoDatastream(slubInfoDatastream, fileDatastreams);
-
             updateOrAdd(repository, pid, slubInfoDatastream);
             updateOrAdd(repository, pid, metsContainer.getQucosaXmlDatastream());
             delete(metsContainer.getTemporayFiles());
@@ -299,12 +297,22 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         }
     }
 
-    private void augmentSlubInfoDatastream(Datastream slubInfo, List<Datastream> attachmentDatastreams) throws SWORDException {
-        if (slubInfo == null) {
-            return;
-        }
+    private void ensureAugmentedSlubInfoDatastream(List<Datastream> datastreams) throws SWORDException {
+        final List<Datastream> attachmentDatastreams = findDatastreams("ATT-", datastreams);
+        if (attachmentDatastreams.isEmpty()) return;
 
-        Document info = ((XMLInlineDatastream) slubInfo).toXML();
+        Document info;
+        Datastream slubInfo = findDatastream(METSContainer.DS_ID_SLUBINFO, datastreams);
+        if (slubInfo != null) {
+            info = ((XMLInlineDatastream) slubInfo).toXML();
+        } else {
+            info = new Document();
+            info.addContent(new Element("info", Namespaces.SLUB));
+            slubInfo = new XMLInlineDatastream(METSContainer.DS_ID_SLUBINFO, info);
+            slubInfo.setLabel(METSContainer.DS_ID_SLUBINFO_LABEL);
+            slubInfo.setVersionable(Boolean.parseBoolean(System.getProperty("datastream.versioning", "false")));
+            datastreams.add(slubInfo);
+        }
 
         Element rights = info.getRootElement().getChild("rights", Namespaces.SLUB);
         if (rights == null) {
