@@ -216,7 +216,7 @@ public class QucosaMETSFileHandler_UpdateTest extends QucosaMETSFileHandler_Abst
         Datastream ds = argument.getValue();
         final String inXMLString = JDomHelper.makeString(((XMLInlineDatastream) ds).toXML());
 
-        XMLAssert.assertXpathNotExists("//slub:rights/slub:attachment[@slub:ref='ATT-1']", inXMLString);
+        XMLAssert.assertXpathNotExists("//slub:rights/slub:attachment[@ref='ATT-1']", inXMLString);
     }
 
     private void pretendObjectHasDatastream(String pid, String dsid) {

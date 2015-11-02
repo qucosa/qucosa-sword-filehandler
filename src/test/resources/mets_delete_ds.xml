@@ -29,7 +29,7 @@
                     <slub:info xmlns:slub="http://slub-dresden.de/">
                         <slub:rights>
                             <!-- This should get removed by the update process -->
-                            <slub:attachment slub:ref="ATT-1" slub:hasArchivalValue="no" slub:isDownloadable="yes" />
+                            <slub:attachment ref="ATT-1" hasArchivalValue="no" isDownloadable="yes" />
                         </slub:rights>
                     </slub:info>
                 </mets:xmlData>

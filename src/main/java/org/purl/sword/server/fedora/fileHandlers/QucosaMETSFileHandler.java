@@ -340,7 +340,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
                             @Override
                             public void execute(Object input) {
                                 Element item = (Element) input;
-                                put(item.getAttributeValue("slub:ref", Namespaces.SLUB), item);
+                                put(item.getAttributeValue("ref"), item);
                             }
                         });
             }};
@@ -353,12 +353,12 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
                         attachment = new Element("attachment", Namespaces.SLUB);
                         rights.addContent(attachment);
                     }
-                    attachment.setAttribute("ref", attachmentDatastreamId, Namespaces.SLUB);
-                    attachment.setAttribute("hasArchivalValue", yesno(augmentedDatastream.isHasArchivalValue()), Namespaces.SLUB);
-                    attachment.setAttribute("isDownloadable", yesno(augmentedDatastream.isDownloadable()), Namespaces.SLUB);
+                    attachment.setAttribute("ref", attachmentDatastreamId);
+                    attachment.setAttribute("hasArchivalValue", yesno(augmentedDatastream.isHasArchivalValue()));
+                    attachment.setAttribute("isDownloadable", yesno(augmentedDatastream.isDownloadable()));
                 } else if (attachmentDatastream instanceof VoidDatastream) {
                     rights.removeContent(
-                            new XPathQuery("slub:attachment[@slub:ref='" + attachmentDatastream.getId() + "']")
+                            new XPathQuery("slub:attachment[@ref='" + attachmentDatastream.getId() + "']")
                                     .selectNode(rights));
                 }
             }

@@ -127,14 +127,15 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
         Datastream ds = getDatastream("SLUB-INFO", argument.getValue());
         final String inXMLString = JDomHelper.makeString(((XMLInlineDatastream) ds).toXML());
 
+        System.out.println(inXMLString);
         XMLAssert.assertXpathExists("//slub:rights/slub:attachment[" +
-                "@slub:ref='ATT-0' and " +
-                "@slub:hasArchivalValue='yes' and " +
-                "@slub:isDownloadable='no']", inXMLString);
+                "@ref='ATT-0' and " +
+                "@hasArchivalValue='yes' and " +
+                "@isDownloadable='no']", inXMLString);
         XMLAssert.assertXpathExists("//slub:rights/slub:attachment[" +
-                "@slub:ref='ATT-1' and " +
-                "@slub:hasArchivalValue='no' and " +
-                "@slub:isDownloadable='yes']", inXMLString);
+                "@ref='ATT-1' and " +
+                "@hasArchivalValue='no' and " +
+                "@isDownloadable='yes']", inXMLString);
     }
 
     @Test
