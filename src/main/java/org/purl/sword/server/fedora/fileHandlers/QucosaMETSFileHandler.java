@@ -132,6 +132,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
             update(repository, pid, fedoraObject.getDc());
             final List<Datastream> datastreams = metsContainer.getDatastreams();
             ensureAugmentedSlubInfoDatastream(datastreams);
+            removeAugmentationWrapperFrom(datastreams);
 
             final List<Datastream> fileDatastreams = findDatastreams("ATT-", datastreams);
             final Datastream slubInfoDatastream = findDatastream(METSContainer.DS_ID_SLUBINFO, datastreams);
