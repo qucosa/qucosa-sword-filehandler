@@ -133,7 +133,7 @@ public class METSContainer {
                     final boolean isFile = uri.getScheme().equals("file");
                     final String mimetype = validateAndReturn("mime type", fileElement.getAttributeValue("MIMETYPE"));
 
-                    Datastream ds = buildDatastream(id, fLocat, href, mimetype, isFile);
+                    Datastream ds = buildDatastream(id, fileElement, href, mimetype, isFile);
 
                     String digestType = emptyIfNull(fileElement.getAttributeValue("CHECKSUMTYPE"));
                     String digest = emptyIfNull(fileElement.getAttributeValue("CHECKSUM"));
@@ -269,7 +269,7 @@ public class METSContainer {
         return (s == null) ? "" : s;
     }
 
-    private Datastream buildDatastream(String id, Element fLocat, String href, String mimetype, boolean isFile) {
+    private Datastream buildDatastream(String id, Element fileElement, String href, String mimetype, boolean isFile) {
         Datastream datastream;
         if (isFile) {
             LocalDatastream lds = new LocalDatastream(id, mimetype, href);
@@ -278,7 +278,7 @@ public class METSContainer {
         } else {
             datastream = new ManagedDatastream(id, mimetype, href);
         }
-        datastream.setLabel(fLocat.getAttributeValue("title", Namespaces.XLINK));
+        datastream.setLabel(fileElement.getAttributeValue("LABEL", Namespaces.MEXT));
         return datastream;
     }
 

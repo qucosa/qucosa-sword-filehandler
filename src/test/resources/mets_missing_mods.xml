@@ -15,7 +15,9 @@
   ~ limitations under the License.
   -->
 
-<mets:mets xmlns:mets="http://www.loc.gov/METS/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OBJID="qucosa:1"
+<mets:mets xmlns:mets="http://www.loc.gov/METS/"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           OBJID="qucosa:1"
            xsi:schemaLocation="http://www.loc.gov/METS/ http://www.loc.gov/standards/mets/mets.xsd">
     <mets:dmdSec ID="DMD_000"/>
     <mets:fileSec>

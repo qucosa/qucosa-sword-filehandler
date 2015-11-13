@@ -15,8 +15,10 @@
   ~ limitations under the License.
   -->
 
-<mets:mets xmlns:mets="http://www.loc.gov/METS/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<mets:mets xmlns:mets="http://www.loc.gov/METS/"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xmlns:xlink="http://www.w3.org/1999/xlink"
+           xmlns:mext="http://slub-dresden.de/mets"
            OBJID="qucosa:1"
            xsi:schemaLocation="http://www.loc.gov/METS/ http://www.loc.gov/standards/mets/mets.xsd">
     <mets:dmdSec ID="DMD_000">
@@ -24,7 +26,7 @@
             <mets:xmlData>
                 <mods:mods xmlns:mods="http://www.loc.gov/mods/v3"
                            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                           xsi:schemaLocation="http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-5.xsd">
+                           xsi:schemaLocation="http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-6.xsd">
                     <mods:titleInfo lang="ger" usage="primary">
                         <mods:title>Qucosa: Quality Content of Saxony</mods:title>
                         <mods:subTitle>Das EFRE-Projekt Sächsischer Dokumentenserver</mods:subTitle>
@@ -84,12 +86,10 @@
     </mets:amdSec>
     <mets:fileSec>
         <mets:fileGrp USE="ORIGINAL">
-            <mets:file ID="ATT-1" MIMETYPE="application/pdf">
+            <mets:file ID="ATT-1" MIMETYPE="application/pdf" mext:LABEL="Attachment">
                 <mets:FLocat xmlns:xlin="http://www.w3.org/1999/xlink"
                              LOCTYPE="URL"
-                             xlin:href="file:/Attachment.pdf"
-                             xlin:title="Attachment"
-                        />
+                             xlin:href="file:/Attachment.pdf" />
             </mets:file>
         </mets:fileGrp>
     </mets:fileSec>

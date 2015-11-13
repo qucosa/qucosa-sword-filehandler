@@ -15,7 +15,10 @@
   ~ limitations under the License.
   -->
 
-<mets:mets xmlns:mets="http://www.loc.gov/METS/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OBJID="qucosa:1"
+<mets:mets xmlns:mets="http://www.loc.gov/METS/"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:mext="http://slub-dresden.de/mets"
+           OBJID="qucosa:1"
            xsi:schemaLocation="http://www.loc.gov/METS/ http://www.loc.gov/standards/mets/mets.xsd">
     <mets:dmdSec ID="DMD_000">
         <mets:mdWrap MDTYPE="MODS">
@@ -35,11 +38,11 @@
         <mets:fileGrp USE="ORIGINAL">
             <mets:file ID="ATT-1" MIMETYPE="application/pdf"
                        CHECKSUM="9510c93637f6baafbb9082a802aa6c3d1167f4cf6a02c432131de3a6f98d39cd3cac5f26d7b472e8fc2a50930a4e1ca89e8d9e839c81ef201198678aac3df45a"
-                       CHECKSUMTYPE="SHA-512">
+                       CHECKSUMTYPE="SHA-512"
+                       mext:LABEL="Attachment">
                 <mets:FLocat xmlns:xlin="http://www.w3.org/1999/xlink"
                              LOCTYPE="URL"
-                             xlin:href="file:/Attachment.pdf"
-                             xlin:title="Attachment"/>
+                             xlin:href="file:/Attachment.pdf"/>
             </mets:file>
         </mets:fileGrp>
     </mets:fileSec>

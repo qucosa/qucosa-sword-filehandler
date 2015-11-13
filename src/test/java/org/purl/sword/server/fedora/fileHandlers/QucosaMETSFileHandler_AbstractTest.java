@@ -91,7 +91,7 @@ abstract class QucosaMETSFileHandler_AbstractTest {
     public static final String METS_FILE_FILEGROUPS = "/mets_download_filegroup.xml";
     public static final String METS_FILE_UPDATE = "/mets_update.xml";
     public static final String METS_FILE_CHECKSUM = "/mets_file_checksum.xml";
-    public static final String METS_FILE_UPDATE_MD5 = "394c8595b013924333c38a513798e197";
+    public static final String METS_FILE_UPDATE_MD5 = "9a8d972d972eb799d989d0d2307c9822";
     public static final String CONTENT_MODEL = "info:fedora/qucosa:CModel";
 
     protected FedoraRepository mockFedoraRepository;

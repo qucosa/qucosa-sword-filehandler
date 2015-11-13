@@ -24,6 +24,7 @@ public final class Namespaces {
     public static final Namespace SLUB = Namespace.getNamespace("slub", "http://slub-dresden.de/");
     public static final Namespace XLINK = Namespace.getNamespace("xlink", "http://www.w3.org/1999/xlink");
     public static final Namespace MODS = Namespace.getNamespace("mods", "http://www.loc.gov/mods/v3");
+    public static final Namespace MEXT = Namespace.getNamespace("mext", "http://slub-dresden.de/mets");
 
     private Namespaces() {
     }
