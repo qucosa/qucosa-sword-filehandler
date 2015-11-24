@@ -32,7 +32,8 @@ public class AugmentedDatastream extends Datastream {
     final private Datastream wrappedDatastream;
 
     public AugmentedDatastream(Datastream ds, boolean hasArchivalValue, boolean isDownloadable) {
-        super(ds.getId(), ds.getState(), ds.getControlGroup(), ds.getMimeType());
+        super(ds.getId(), ds.getState(), ds.getControlGroup(),
+                ds.getMimeType(), ds.getCreateDate(), ds.getLabel(), ds.isVersionable());
         this.hasArchivalValue = hasArchivalValue;
         this.isDownloadable = isDownloadable;
         this.wrappedDatastream = ds;
@@ -40,77 +41,52 @@ public class AugmentedDatastream extends Datastream {
 
     @Override
     public String getId() {
-        if (wrappedDatastream.getId() == null) wrappedDatastream.setId(super.getId());
         return wrappedDatastream.getId();
     }
 
     @Override
     public void setId(String pId) {
-        if (wrappedDatastream == null) {
-            super.setId(pId);
-        } else {
-            wrappedDatastream.setId(pId);
-        }
+        wrappedDatastream.setId(pId);
     }
 
     @Override
     public State getState() {
-        if (wrappedDatastream.getState() == null) wrappedDatastream.setState(super.getState());
         return wrappedDatastream.getState();
     }
 
     @Override
     public void setState(State pState) {
-        if (wrappedDatastream == null) {
-            super.setState(pState);
-        } else {
-            wrappedDatastream.setState(pState);
-        }
+        wrappedDatastream.setState(pState);
     }
 
     @Override
     public ControlGroup getControlGroup() {
-        if (wrappedDatastream.getControlGroup() == null) wrappedDatastream.setControlGroup(super.getControlGroup());
         return wrappedDatastream.getControlGroup();
     }
 
     @Override
     public void setControlGroup(ControlGroup pControlGroup) {
-        if (wrappedDatastream == null) {
-            super.setControlGroup(pControlGroup);
-        } else {
-            wrappedDatastream.setControlGroup(pControlGroup);
-        }
+        wrappedDatastream.setControlGroup(pControlGroup);
     }
 
     @Override
     public String getMimeType() {
-        if (wrappedDatastream.getMimeType() == null) wrappedDatastream.setMimeType(super.getMimeType());
         return wrappedDatastream.getMimeType();
     }
 
     @Override
     public void setMimeType(String pMimeType) {
-        if (wrappedDatastream == null) {
-            super.setMimeType(pMimeType);
-        } else {
-            wrappedDatastream.setMimeType(pMimeType);
-        }
+        wrappedDatastream.setMimeType(pMimeType);
     }
 
     @Override
     public String getCreateDate() {
-        if (wrappedDatastream.getCreateDate() == null) wrappedDatastream.setCreateDate(super.getCreateDate());
         return wrappedDatastream.getCreateDate();
     }
 
     @Override
     public void setCreateDate(String pCreateDate) {
-        if (wrappedDatastream == null) {
-            super.setCreateDate(pCreateDate);
-        } else {
-            wrappedDatastream.setCreateDate(pCreateDate);
-        }
+        wrappedDatastream.setCreateDate(pCreateDate);
     }
 
     @Override
