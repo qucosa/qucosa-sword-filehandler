@@ -66,74 +66,32 @@ public class QucosaMETSFileHandler_UpdateTest extends QucosaMETSFileHandler_Abst
 
     @Test
     public void dcGetsUpdated() throws Exception {
-        FileHandler fh = new QucosaMETSFileHandler();
-        pretendObjectHasDatastream("test:1", "DC");
-        ArgumentCaptor<Datastream> argument = ArgumentCaptor.forClass(Datastream.class);
-        DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE, "test:1");
-
-        fh.updateDeposit(depositCollection, buildServiceDocument());
-
-        verify(mockFedoraRepository).modifyDatastream(eq("test:1"), argument.capture(), anyString());
+        verifyModifyDatastream("test:1", "DC");
     }
 
     @Test
     public void modsGetsUpdated() throws Exception {
-        FileHandler fh = new QucosaMETSFileHandler();
-        pretendObjectHasDatastream("test:1", "MODS");
-        ArgumentCaptor<Datastream> argument = ArgumentCaptor.forClass(Datastream.class);
-        DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE, "test:1");
-
-        fh.updateDeposit(depositCollection, buildServiceDocument());
-
-        verify(mockFedoraRepository).modifyDatastream(eq("test:1"), argument.capture(), anyString());
+        verifyModifyDatastream("test:1", "MODS");
     }
 
     @Test
     public void slubinfoGetsUpdated() throws Exception {
-        FileHandler fh = new QucosaMETSFileHandler();
-        pretendObjectHasDatastream("test:1", "SLUB-INFO");
-        ArgumentCaptor<Datastream> argument = ArgumentCaptor.forClass(Datastream.class);
-        DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE, "test:1");
-
-        fh.updateDeposit(depositCollection, buildServiceDocument());
-
-        verify(mockFedoraRepository).modifyDatastream(eq("test:1"), argument.capture(), anyString());
+        verifyModifyDatastream("test:1", "SLUB-INFO");
     }
 
     @Test
     public void slubinfoGetsAdded() throws Exception {
-        FileHandler fh = new QucosaMETSFileHandler();
-        pretendObjectHasDatastream("test:1", "SLUB-INFO");
-        ArgumentCaptor<Datastream> argument = ArgumentCaptor.forClass(Datastream.class);
-        DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE, "test:1");
-
-        fh.updateDeposit(depositCollection, buildServiceDocument());
-
-        verify(mockFedoraRepository, atLeastOnce()).addDatastream(eq("test:1"), argument.capture(), anyString());
+        verifyAddDatastream("test:1", "SLUB-INFO");
     }
 
     @Test
     public void qucosaXmlGetsUpdated() throws Exception {
-        FileHandler fh = new QucosaMETSFileHandler();
-        pretendObjectHasDatastream("test:1", "QUCOSA-XML");
-        ArgumentCaptor<Datastream> argument = ArgumentCaptor.forClass(Datastream.class);
-        DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE, "test:1");
-
-        fh.updateDeposit(depositCollection, buildServiceDocument());
-
-        verify(mockFedoraRepository).modifyDatastream(eq("test:1"), argument.capture(), anyString());
+        verifyModifyDatastream("test:1", "QUCOSA-XML");
     }
 
     @Test
     public void qucosaXmlGetsAdded() throws Exception {
-        FileHandler fh = new QucosaMETSFileHandler();
-        pretendObjectHasDatastream("test:1", "QUCOSA-XML");
-        ArgumentCaptor<Datastream> argument = ArgumentCaptor.forClass(Datastream.class);
-        DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE, "test:1");
-
-        fh.updateDeposit(depositCollection, buildServiceDocument());
-
-        verify(mockFedoraRepository, atLeastOnce()).addDatastream(eq("test:1"), argument.capture(), anyString());
+        verifyAddDatastream("test:1", "QUCOSA-XML");
     }
 
     @Test
@@ -200,10 +158,6 @@ public class QucosaMETSFileHandler_UpdateTest extends QucosaMETSFileHandler_Abst
         assertEquals("edit", link.getRel());
     }
 
-    private String reverse(String s) {
-        return new StringBuilder(s).reverse().toString();
-    }
-
     @Test
     public void removes_attachment_for_deleted_file_in_SlubInfo() throws Exception {
         FileHandler fh = new QucosaMETSFileHandler();
@@ -217,6 +171,28 @@ public class QucosaMETSFileHandler_UpdateTest extends QucosaMETSFileHandler_Abst
         final String inXMLString = JDomHelper.makeString(((XMLInlineDatastream) ds).toXML());
 
         XMLAssert.assertXpathNotExists("//slub:rights/slub:attachment[@ref='ATT-1']", inXMLString);
+    }
+
+    private void verifyAddDatastream(String pid, String dsid) throws Exception {
+        FileHandler fh = new QucosaMETSFileHandler();
+        pretendObjectHasDatastream(pid, dsid);
+        ArgumentCaptor<Datastream> argument = ArgumentCaptor.forClass(Datastream.class);
+        DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE, pid);
+        fh.updateDeposit(depositCollection, buildServiceDocument());
+        verify(mockFedoraRepository, atLeastOnce()).addDatastream(eq(pid), argument.capture(), anyString());
+    }
+
+    private void verifyModifyDatastream(String pid, String dsid) throws Exception {
+        FileHandler fh = new QucosaMETSFileHandler();
+        pretendObjectHasDatastream(pid, dsid);
+        ArgumentCaptor<Datastream> argument = ArgumentCaptor.forClass(Datastream.class);
+        DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE, pid);
+        fh.updateDeposit(depositCollection, buildServiceDocument());
+        verify(mockFedoraRepository).modifyDatastream(eq(pid), argument.capture(), anyString());
+    }
+
+    private String reverse(String s) {
+        return new StringBuilder(s).reverse().toString();
     }
 
     private void pretendObjectHasDatastream(String pid, String dsid) {

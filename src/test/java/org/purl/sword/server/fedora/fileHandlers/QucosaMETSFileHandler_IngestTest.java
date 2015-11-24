@@ -61,24 +61,14 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
 
     @Test
     public void dcDatastreamHasTitle() throws Exception {
-        FileHandler fh = new QucosaMETSFileHandler();
-        ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
-
-        fh.ingestDeposit(buildDeposit(METS_FILE_OK), buildServiceDocument());
-
-        verify(mockFedoraRepository).ingest(argument.capture());
+        ArgumentCaptor<FedoraObject> argument = verifyIngestExecution(buildDeposit(METS_FILE_OK));
         DublinCore result = argument.getValue().getDc();
         assertTrue("Should have title", result.getTitle().contains("Qucosa: Quality Content of Saxony"));
     }
 
     @Test
     public void dcDatastreamHasIdentifiers() throws Exception {
-        FileHandler fh = new QucosaMETSFileHandler();
-        ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
-
-        fh.ingestDeposit(buildDeposit(METS_FILE_OK), buildServiceDocument());
-
-        verify(mockFedoraRepository).ingest(argument.capture());
+        ArgumentCaptor<FedoraObject> argument = verifyIngestExecution(buildDeposit(METS_FILE_OK));
         DublinCore result = argument.getValue().getDc();
 
         assertTrue("Should have URN identifier", result.getIdentifier().contains("urn:nbn:de:bsz:14-qucosa-32992"));
@@ -87,29 +77,37 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
 
     @Test
     public void hasProperSlubInfoDatastream() throws Exception {
-        FileHandler fh = new QucosaMETSFileHandler();
-        ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
+        validateDatastream(buildDeposit(METS_FILE_OK),
+                "SLUB-INFO", "application/vnd.slub-info+xml", State.ACTIVE, true, "SLUB Administrative Metadata");
+    }
+
+    @Test
+    public void hasProperModsDatastream() throws Exception {
+        validateDatastream(buildDeposit(METS_FILE_OK),
+                "MODS", "application/mods+xml", State.ACTIVE, true, "Object Bibliographic Metadata");
+    }
+
+    @Test
+    public void hasProperQucosaXmlDatastream() throws Exception {
+        validateDatastream(buildDeposit(METS_FILE_OK),
+                "QUCOSA-XML", "application/xml", State.INACTIVE, true, "Pristine Qucosa XML Metadata");
+    }
+
+    private void validateDatastream(DepositCollection deposit, String dsID, String mimeType, State state, boolean versionable, String label) throws Exception {
         System.setProperty("datastream.versioning", "true");
+        ArgumentCaptor<FedoraObject> argument = verifyIngestExecution(deposit);
+        Datastream ds = getDatastream(dsID, argument.getValue());
 
-        fh.ingestDeposit(buildDeposit(METS_FILE_OK), buildServiceDocument());
-
-        verify(mockFedoraRepository).ingest(argument.capture());
-        Datastream ds = getDatastream("SLUB-INFO", argument.getValue());
         assertNotNull("Should have datastream", ds);
-        assertEquals("Should have SLUB mimetype", "application/vnd.slub-info+xml", ds.getMimeType());
-        assertEquals("Should be active", State.ACTIVE, ds.getState());
-        assertEquals("Should be versionable", true, ds.isVersionable());
-        assertEquals("Should have proper label", "SLUB Administrative Metadata", ds.getLabel());
+        assertEquals("Expected other mimetype", mimeType, ds.getMimeType());
+        assertEquals("Expected state " + state.toString(), state, ds.getState());
+        assertEquals(String.format("Should%sbe ", (versionable) ? " " : " not "), versionable, ds.isVersionable());
+        assertEquals("Expected different label", label, ds.getLabel());
     }
 
     @Test
     public void emits_rights_element_in_SlubInfo() throws Exception {
-        FileHandler fh = new QucosaMETSFileHandler();
-        ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
-
-        fh.ingestDeposit(buildDeposit(METS_FILE_FILEGROUPS), buildServiceDocument());
-
-        verify(mockFedoraRepository).ingest(argument.capture());
+        ArgumentCaptor<FedoraObject> argument = verifyIngestExecution(buildDeposit(METS_FILE_FILEGROUPS));
         Datastream ds = getDatastream("SLUB-INFO", argument.getValue());
         final String inXMLString = JDomHelper.makeString(((XMLInlineDatastream) ds).toXML());
 
@@ -118,16 +116,10 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
 
     @Test
     public void emits_attachment_for_each_file_in_SlubInfo() throws Exception {
-        FileHandler fh = new QucosaMETSFileHandler();
-        ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
-
-        fh.ingestDeposit(buildDeposit(METS_FILE_FILEGROUPS), buildServiceDocument());
-
-        verify(mockFedoraRepository).ingest(argument.capture());
+        ArgumentCaptor<FedoraObject> argument = verifyIngestExecution(buildDeposit(METS_FILE_FILEGROUPS));
         Datastream ds = getDatastream("SLUB-INFO", argument.getValue());
         final String inXMLString = JDomHelper.makeString(((XMLInlineDatastream) ds).toXML());
 
-        System.out.println(inXMLString);
         XMLAssert.assertXpathExists("//slub:rights/slub:attachment[" +
                 "@ref='ATT-0' and " +
                 "@hasArchivalValue='yes' and " +
@@ -139,48 +131,10 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
     }
 
     @Test
-    public void hasProperModsDatastream() throws Exception {
-        FileHandler fh = new QucosaMETSFileHandler();
-        ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
-        System.setProperty("datastream.versioning", "true");
-
-        fh.ingestDeposit(buildDeposit(METS_FILE_OK), buildServiceDocument());
-
-        verify(mockFedoraRepository).ingest(argument.capture());
-        Datastream ds = getDatastream("MODS", argument.getValue());
-        assertNotNull("Should have datastream", ds);
-        assertEquals("Should have MODS mimetype", "application/mods+xml", ds.getMimeType());
-        assertEquals("Should be active", State.ACTIVE, ds.getState());
-        assertEquals("Should be versionable", true, ds.isVersionable());
-        assertEquals("Should have proper label", "Object Bibliographic Metadata", ds.getLabel());
-    }
-
-    @Test
-    public void hasProperQucosaXmlDatastream() throws Exception {
-        FileHandler fh = new QucosaMETSFileHandler();
-        ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
-        System.setProperty("datastream.versioning", "true");
-
-        fh.ingestDeposit(buildDeposit(METS_FILE_OK), buildServiceDocument());
-
-        verify(mockFedoraRepository).ingest(argument.capture());
-        Datastream ds = getDatastream("QUCOSA-XML", argument.getValue());
-        assertNotNull("Should have datastream", ds);
-        assertEquals("Should have XML mimetype", "application/xml", ds.getMimeType());
-        assertEquals("Should be inactive", State.INACTIVE, ds.getState());
-        assertEquals("Should be versionable", true, ds.isVersionable());
-        assertEquals("Should have proper label", "Pristine Qucosa XML Metadata", ds.getLabel());
-    }
-
-    @Test
     public void hasProperFileDatastream() throws Exception {
-        FileHandler fh = new QucosaMETSFileHandler();
-        ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
-
-        fh.ingestDeposit(buildDeposit(METS_FILE_OK), buildServiceDocument());
-
-        verify(mockFedoraRepository).ingest(argument.capture());
+        ArgumentCaptor<FedoraObject> argument = verifyIngestExecution(buildDeposit(METS_FILE_OK));
         Datastream ds = getDatastream("ATT-1", argument.getValue());
+
         assertNotNull("Should have datastream", ds);
         assertEquals("Should have PDF mimetype", "application/pdf", ds.getMimeType());
         assertEquals("Should be active", State.ACTIVE, ds.getState());
@@ -190,14 +144,10 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
 
     @Test
     public void localDatastreamShouldNotDeleteSourceFile() throws Exception {
-        FileHandler fh = new QucosaMETSFileHandler();
-        ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
-
-        fh.ingestDeposit(buildDeposit(METS_FILE_OK), buildServiceDocument());
-
-        verify(mockFedoraRepository).ingest(argument.capture());
+        ArgumentCaptor<FedoraObject> argument = verifyIngestExecution(buildDeposit(METS_FILE_OK));
         final Datastream datastream = getDatastream("ATT-1", argument.getValue());
         LocalDatastream lds = (LocalDatastream) datastream;
+
         assertFalse("Should not delete source file", lds.isCleanup());
     }
 
@@ -207,7 +157,6 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
         FileHandler fh = new QucosaMETSFileHandler();
         File tmpFile = File.createTempFile(this.getClass().getName(), String.valueOf(UUID.randomUUID()));
         tmpFile.deleteOnExit();
-
         fh.ingestDeposit(buildDepositWithTempFile(METS_FILE_OK, tmpFile.toURI().toASCIIString()), buildServiceDocument());
 
         assertFalse(tmpFile.exists());
@@ -216,26 +165,20 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
     @Test(expected = SWORDException.class)
     public void exceptionOnMissingMODS() throws Exception {
         FileHandler fh = new QucosaMETSFileHandler();
-
         fh.ingestDeposit(buildDeposit(METS_FILE_BAD), buildServiceDocument());
     }
 
     @Test(expected = SWORDException.class)
     public void exceptionOnInvalidFileLink() throws Exception {
         FileHandler fh = new QucosaMETSFileHandler();
-
         fh.ingestDeposit(buildDeposit(METS_FILE_BAD2), buildServiceDocument());
     }
 
     @Test
     public void ingestsHttpFileURL() throws Exception {
-        FileHandler fh = new QucosaMETSFileHandler();
-        ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
-
-        fh.ingestDeposit(buildDeposit(METS_FILE_URL), buildServiceDocument());
-
-        verify(mockFedoraRepository).ingest(argument.capture());
+        ArgumentCaptor<FedoraObject> argument = verifyIngestExecution(buildDeposit(METS_FILE_URL));
         Datastream ds = getDatastream("ATT-1", argument.getValue());
+
         assertNotNull("Should have datastream", ds);
         assertEquals("Should have PDF mimetype", "application/pdf", ds.getMimeType());
         assertEquals("Should be active", State.ACTIVE, ds.getState());
@@ -245,43 +188,33 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
     }
 
     @Test
-    public void warningIfNoOnBehalfHeader() throws Exception {
+    public void logs_warning_if_no_OnBehalf_header() throws Exception {
         FileHandler fh = new QucosaMETSFileHandler();
         final DepositCollection deposit = buildDeposit(METS_FILE_URL);
         deposit.setOnBehalfOf(null);
         ArgumentCaptor<LoggingEvent> captor = ArgumentCaptor.forClass(LoggingEvent.class);
-
         fh.ingestDeposit(deposit, buildServiceDocument());
-
         verify(mockAppender).doAppend(captor.capture());
         LoggingEvent loggingEvent = captor.getValue();
+
         assertTrue(loggingEvent.getMessage().toString().startsWith("X-On-Behalf-Of"));
         assertEquals(Level.WARN, loggingEvent.getLevel());
     }
 
     @Test
     public void slugHeaderDeterminesPID() throws Exception {
-        FileHandler fh = new QucosaMETSFileHandler();
-        ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
         final DepositCollection deposit = buildDeposit(METS_FILE_OK);
         deposit.setSlug("qucosa:4711");
+        ArgumentCaptor<FedoraObject> argument = verifyIngestExecution(deposit);
 
-        fh.ingestDeposit(deposit, buildServiceDocument());
-
-        verify(mockFedoraRepository).ingest(argument.capture());
         assertEquals("SLUG header should fix PID for ingested object", "qucosa:4711", argument.getValue().getPid());
     }
 
     @Test
     public void includesChecksum() throws Exception {
-        FileHandler fh = new QucosaMETSFileHandler();
-        ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
-        final DepositCollection deposit = buildDeposit(METS_FILE_CHECKSUM);
-
-        fh.ingestDeposit(deposit, buildServiceDocument());
-
-        verify(mockFedoraRepository).ingest(argument.capture());
+        ArgumentCaptor<FedoraObject> argument = verifyIngestExecution(buildDeposit(METS_FILE_CHECKSUM));
         Datastream ds = getDatastream("ATT-1", argument.getValue());
+
         assertNotNull("Should have datastream", ds);
         assertNotNull("Should have checksum", ds.getDigest());
         assertEquals("Should have checksum type", "SHA-512", ds.getDigestType());
@@ -289,13 +222,7 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
 
     @Test
     public void isMemberOfCollectionAfterIngest() throws Exception {
-        FileHandler fh = new QucosaMETSFileHandler();
-        ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
-        final DepositCollection deposit = buildDeposit(METS_FILE_ALLREFS);
-
-        fh.ingestDeposit(deposit, buildServiceDocument());
-
-        verify(mockFedoraRepository).ingest(argument.capture());
+        ArgumentCaptor<FedoraObject> argument = verifyIngestExecution(buildDeposit(METS_FILE_ALLREFS));
         FedoraObject fo = argument.getValue();
         RelationshipInspector relationship = new RelationshipInspector(fo.getRelsext());
 
@@ -307,13 +234,7 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
 
     @Test
     public void hasQucosaContentModel() throws Exception {
-        FileHandler fh = new QucosaMETSFileHandler();
-        ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
-        final DepositCollection deposit = buildDeposit(METS_FILE_ALLREFS);
-
-        fh.ingestDeposit(deposit, buildServiceDocument());
-
-        verify(mockFedoraRepository).ingest(argument.capture());
+        ArgumentCaptor<FedoraObject> argument = verifyIngestExecution(buildDeposit(METS_FILE_ALLREFS));
         FedoraObject fo = argument.getValue();
         RelationshipInspector relationship = new RelationshipInspector(fo.getRelsext());
 
@@ -325,62 +246,36 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
 
     @Test
     public void emits_IsContituentOf_Relationship_for_constituent_type() throws Exception {
-        FileHandler fh = new QucosaMETSFileHandler();
-        ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
-        final DepositCollection deposit = buildDeposit(METS_FILE_ALLREFS);
-
-        fh.ingestDeposit(deposit, buildServiceDocument());
-
-        verify(mockFedoraRepository).ingest(argument.capture());
-        FedoraObject fo = argument.getValue();
-        RelationshipInspector relationship = new RelationshipInspector(fo.getRelsext());
-
-        final String constituentOf = "urn:nbn:de:bsz:14-qucosa-32825";
-
-        assertNotNull("Should have defined relationships", relationship);
-        assertRelationship("Should have isConstituentOf relationship to: " + constituentOf,
-                "isConstituentOf", "info:fedora/" + constituentOf,
-                relationship.getElements());
+        verifyRelationship(buildDeposit(METS_FILE_ALLREFS), "isConstituentOf", "urn:nbn:de:bsz:14-qucosa-32825");
     }
 
     @Test
     public void emits_IsContituentOf_Relationship_for_series_type() throws Exception {
-        FileHandler fh = new QucosaMETSFileHandler();
-        ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
-        final DepositCollection deposit = buildDeposit(METS_FILE_ALLREFS);
-
-        fh.ingestDeposit(deposit, buildServiceDocument());
-
-        verify(mockFedoraRepository).ingest(argument.capture());
-        FedoraObject fo = argument.getValue();
-        RelationshipInspector relationship = new RelationshipInspector(fo.getRelsext());
-
-        final String constituentOf = "urn:nbn:de:bsz:14-qucosa-38419";
-
-        assertNotNull("Should have defined relationships", relationship);
-        assertRelationship("Should have isConstituentOf relationship to: " + constituentOf,
-                "isConstituentOf", "info:fedora/" + constituentOf,
-                relationship.getElements());
+        verifyRelationship(buildDeposit(METS_FILE_ALLREFS), "isConstituentOf", "urn:nbn:de:bsz:14-qucosa-38419");
     }
 
     @Test
     public void emits_IsDerivationOf_Relationship_for_preceding_type() throws Exception {
-        FileHandler fh = new QucosaMETSFileHandler();
-        ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
-        final DepositCollection deposit = buildDeposit(METS_FILE_ALLREFS);
+        verifyRelationship(buildDeposit(METS_FILE_ALLREFS), "isDerivationOf", "urn:nbn:de:bsz:14-qucosa-25559");
+    }
 
-        fh.ingestDeposit(deposit, buildServiceDocument());
-
-        verify(mockFedoraRepository).ingest(argument.capture());
+    private void verifyRelationship(DepositCollection deposit, String relationshipName, String referenceUrn) throws Exception {
+        ArgumentCaptor<FedoraObject> argument = verifyIngestExecution(deposit);
         FedoraObject fo = argument.getValue();
         RelationshipInspector relationship = new RelationshipInspector(fo.getRelsext());
 
-        final String constituentOf = "urn:nbn:de:bsz:14-qucosa-25559";
-
         assertNotNull("Should have defined relationships", relationship);
-        assertRelationship("Should have isDerivation relationship to: " + constituentOf,
-                "isDerivationOf", "info:fedora/" + constituentOf,
+        assertRelationship("Should have isDerivation relationship to: " + referenceUrn,
+                relationshipName, "info:fedora/" + referenceUrn,
                 relationship.getElements());
+    }
+
+    private ArgumentCaptor<FedoraObject> verifyIngestExecution(DepositCollection deposit) throws Exception {
+        FileHandler fh = new QucosaMETSFileHandler();
+        ArgumentCaptor<FedoraObject> argument = ArgumentCaptor.forClass(FedoraObject.class);
+        fh.ingestDeposit(deposit, buildServiceDocument());
+        verify(mockFedoraRepository).ingest(argument.capture());
+        return argument;
     }
 
     private void assertRelationship(String message, String name, String value, List<Element> elements) {
