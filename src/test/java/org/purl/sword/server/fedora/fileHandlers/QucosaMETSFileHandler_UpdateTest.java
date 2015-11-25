@@ -19,6 +19,8 @@ package org.purl.sword.server.fedora.fileHandlers;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
 import org.custommonkey.xmlunit.XMLAssert;
+import org.jdom.Document;
+import org.jdom.Element;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.purl.sword.atom.Link;
@@ -66,47 +68,44 @@ public class QucosaMETSFileHandler_UpdateTest extends QucosaMETSFileHandler_Abst
 
     @Test
     public void dcGetsUpdated() throws Exception {
-        verifyModifyDatastream("test:1", "DC");
+        ArgumentCaptor<Datastream> argument = runUpdateDeposit("test:1", "DC", METS_FILE_UPDATE);
+        verify(mockFedoraRepository).modifyDatastream(eq("test:1"), argument.capture(), anyString());
     }
 
     @Test
     public void modsGetsUpdated() throws Exception {
-        verifyModifyDatastream("test:1", "MODS");
+        ArgumentCaptor<Datastream> argument = runUpdateDeposit("test:1", "MODS", METS_FILE_UPDATE);
+        verify(mockFedoraRepository).modifyDatastream(eq("test:1"), argument.capture(), anyString());
     }
 
     @Test
     public void slubinfoGetsUpdated() throws Exception {
-        verifyModifyDatastream("test:1", "SLUB-INFO");
+        ArgumentCaptor<Datastream> argument = runUpdateDeposit("test:1", "SLUB-INFO", METS_FILE_UPDATE);
+        verify(mockFedoraRepository).modifyDatastream(eq("test:1"), argument.capture(), anyString());
     }
 
     @Test
     public void slubinfoGetsAdded() throws Exception {
-        verifyAddDatastream("test:1", "SLUB-INFO");
+        ArgumentCaptor<Datastream> argument = runUpdateDeposit("test:1", "SLUB-INFO", METS_FILE_UPDATE);
+        verify(mockFedoraRepository, atLeastOnce()).addDatastream(eq("test:1"), argument.capture(), anyString());
     }
 
     @Test
     public void qucosaXmlGetsUpdated() throws Exception {
-        verifyModifyDatastream("test:1", "QUCOSA-XML");
+        ArgumentCaptor<Datastream> argument = runUpdateDeposit("test:1", "QUCOSA-XML", METS_FILE_UPDATE);
+        verify(mockFedoraRepository).modifyDatastream(eq("test:1"), argument.capture(), anyString());
     }
 
     @Test
     public void qucosaXmlGetsAdded() throws Exception {
-        verifyAddDatastream("test:1", "QUCOSA-XML");
+        ArgumentCaptor<Datastream> argument = runUpdateDeposit("test:1", "QUCOSA-XML", METS_FILE_UPDATE);
+        verify(mockFedoraRepository, atLeastOnce()).addDatastream(eq("test:1"), argument.capture(), anyString());
     }
 
     @Test
     public void datastreamGetsUpdated() throws Exception {
-        FileHandler fh = new QucosaMETSFileHandler();
-        pretendObjectHasDatastream("test:1", "ATT-1");
-        ArgumentCaptor<Datastream> argument = ArgumentCaptor.forClass(Datastream.class);
-        DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE, "test:1");
-
-        fh.updateDeposit(depositCollection, buildServiceDocument());
-
-        verify(mockFedoraRepository).modifyDatastream(
-                eq("test:1"),
-                argument.capture(),
-                anyString());
+        ArgumentCaptor<Datastream> argument = runUpdateDeposit("test:1", "ATT-1", METS_FILE_UPDATE);
+        verify(mockFedoraRepository).modifyDatastream(eq("test:1"), argument.capture(), anyString());
         assertEquals("Attachment", argument.getValue().getLabel());
     }
 
@@ -160,12 +159,7 @@ public class QucosaMETSFileHandler_UpdateTest extends QucosaMETSFileHandler_Abst
 
     @Test
     public void removes_attachment_for_deleted_file_in_SlubInfo() throws Exception {
-        FileHandler fh = new QucosaMETSFileHandler();
-        pretendObjectHasDatastream("test:1", "SLUB-INFO");
-        ArgumentCaptor<Datastream> argument = ArgumentCaptor.forClass(Datastream.class);
-
-        fh.updateDeposit(buildDeposit(METS_FILE_DELETE_DS, "test:1"), buildServiceDocument());
-
+        ArgumentCaptor<Datastream> argument = runUpdateDeposit("test:1", "SLUB-INFO", METS_FILE_DELETE_DS);
         verify(mockFedoraRepository).modifyDatastream(eq("test:1"), argument.capture(), anyString());
         Datastream ds = argument.getValue();
         final String inXMLString = JDomHelper.makeString(((XMLInlineDatastream) ds).toXML());
@@ -173,22 +167,81 @@ public class QucosaMETSFileHandler_UpdateTest extends QucosaMETSFileHandler_Abst
         XMLAssert.assertXpathNotExists("//slub:rights/slub:attachment[@ref='ATT-1']", inXMLString);
     }
 
-    private void verifyAddDatastream(String pid, String dsid) throws Exception {
-        FileHandler fh = new QucosaMETSFileHandler();
-        pretendObjectHasDatastream(pid, dsid);
-        ArgumentCaptor<Datastream> argument = ArgumentCaptor.forClass(Datastream.class);
-        DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE, pid);
-        fh.updateDeposit(depositCollection, buildServiceDocument());
-        verify(mockFedoraRepository, atLeastOnce()).addDatastream(eq(pid), argument.capture(), anyString());
+    @Test
+    public void updates_existing_attachment_archival_value() throws Exception {
+        prepareMockWithSlubInfo();
+
+        ArgumentCaptor<Datastream> argument = runUpdateDeposit("test:1", "SLUB-INFO", METS_NO_FLOCAT);
+        verify(mockFedoraRepository).modifyDatastream(eq("test:1"), argument.capture(), anyString());
+
+        final String inXMLString = JDomHelper.makeString(((XMLInlineDatastream) argument.getValue()).toXML());
+        XMLAssert.assertXpathExists("//slub:rights/slub:attachment[@ref='ATT-2'" +
+                " and @hasArchivalValue='yes'" +
+                " and @isDownloadable='no']", inXMLString);
     }
 
-    private void verifyModifyDatastream(String pid, String dsid) throws Exception {
+    @Test
+    public void dont_overwrite_existing_attachment_elements() throws Exception {
+        prepareMockWithSlubInfo();
+
+        ArgumentCaptor<Datastream> argument = runUpdateDeposit("test:1", "SLUB-INFO", METS_JUST_SLUBINFO);
+        verify(mockFedoraRepository).modifyDatastream(eq("test:1"), argument.capture(), anyString());
+
+        final String inXMLString = JDomHelper.makeString(((XMLInlineDatastream) argument.getValue()).toXML());
+        XMLAssert.assertXpathExists("//slub:rights/slub:attachment[@ref='ATT-0' and @hasArchivalValue='yes']", inXMLString);
+        XMLAssert.assertXpathExists("//slub:rights/slub:attachment[@ref='ATT-2' and @hasArchivalValue='no']", inXMLString);
+    }
+
+    @Test
+    public void merge_attachment_elements_from_repo_if_there_is_none_in_deposit() throws Exception {
+        prepareMockWithSlubInfo();
+
+        ArgumentCaptor<Datastream> argument = runUpdateDeposit("test:1", "SLUB-INFO", METS_JUST_SLUBINFO_WITHOUT_RIGHTS);
+        verify(mockFedoraRepository).modifyDatastream(eq("test:1"), argument.capture(), anyString());
+
+        final String inXMLString = JDomHelper.makeString(((XMLInlineDatastream) argument.getValue()).toXML());
+        XMLAssert.assertXpathExists("//slub:rights/slub:attachment[@ref='ATT-0' and @hasArchivalValue='yes']", inXMLString);
+        XMLAssert.assertXpathExists("//slub:rights/slub:attachment[@ref='ATT-2' and @hasArchivalValue='no']", inXMLString);
+
+    }
+
+    private void prepareMockWithSlubInfo() {
+        when(mockFedoraRepository.getDatastream("test:1", "SLUB-INFO"))
+                .thenReturn(new XMLInlineDatastream("SLUB-INFO", buildSlubInfoWithAttachments(
+                        "ATT-0", "yes",
+                        "ATT-2", "no")));
+    }
+
+    private Document buildSlubInfoWithAttachments(String... params) {
+        if ((params.length == 0) || params.length % 2 != 0) {
+            throw new IllegalArgumentException("Expect even number of parameters");
+        }
+
+        Document slubInfoDocument;
+        slubInfoDocument = new Document();
+        final Element info = new Element("info", Namespaces.SLUB);
+        final Element rights = new Element("rights", Namespaces.SLUB);
+        slubInfoDocument.addContent(info.addContent(rights));
+
+        for (int i = 0; i < params.length; i = i + 2) {
+            final String dsid = params[i];
+            final String hasArchivalValue = params[i + 1];
+            final Element attachment = new Element("attachment", Namespaces.SLUB);
+            attachment.setAttribute("ref", dsid);
+            attachment.setAttribute("hasArchivalValue", hasArchivalValue);
+            rights.addContent(attachment);
+        }
+
+        return slubInfoDocument;
+    }
+
+    private ArgumentCaptor<Datastream> runUpdateDeposit(String pid, String dsid, String metsFileName) throws Exception {
         FileHandler fh = new QucosaMETSFileHandler();
         pretendObjectHasDatastream(pid, dsid);
         ArgumentCaptor<Datastream> argument = ArgumentCaptor.forClass(Datastream.class);
-        DepositCollection depositCollection = buildDeposit(METS_FILE_UPDATE, pid);
+        DepositCollection depositCollection = buildDeposit(metsFileName, pid);
         fh.updateDeposit(depositCollection, buildServiceDocument());
-        verify(mockFedoraRepository).modifyDatastream(eq(pid), argument.capture(), anyString());
+        return argument;
     }
 
     private String reverse(String s) {

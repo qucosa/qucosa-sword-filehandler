@@ -19,14 +19,16 @@ import org.jdom.Element;
 import org.jdom.Namespace;
 
 /**
- * Represents a datastream that is about to be deleted.
- * Whether the datastream is purged or it's state is set
- * to 'DELETED' depends on the actual strategy carried out
- * by a FileHandler that handles VoidDatastreams.
+ * Represents a datastream without content information.
+ * <p/>
+ * It's used to transport generic datastream properties to
+ * the FileHandler. Whether the datastream is purged or it's
+ * state is set to 'DELETED' depends on the actual strategy
+ * carried out by the FileHandler that handles VoidDatastreams.
  */
 public class VoidDatastream extends Datastream {
     public VoidDatastream(String id) {
-        super(id, State.DELETED, null, null);
+        super(id, null, null, null);
     }
 
     /**

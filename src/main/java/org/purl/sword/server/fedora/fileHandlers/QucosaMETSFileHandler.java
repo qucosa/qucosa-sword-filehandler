@@ -19,6 +19,7 @@ package org.purl.sword.server.fedora.fileHandlers;
 import org.apache.commons.collections.Closure;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.log4j.Logger;
+import org.jdom.Content;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
@@ -111,6 +112,8 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
      * 5. To replace an existing datastream with a newer version a <mets:file> element has to be
      * present, having an ID value equal to the DSID of an existing datastream.
      * <p/>
+     * 6. Omit the <mets:FLocat> element to update USE attributes of a datastream without providing
+     * content.
      * All datastream actions apply to the object PID specified in the deposit.
      *
      * @param deposit         The deposit
@@ -131,20 +134,72 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         if (!deposit.isNoOp()) { // Don't ingest if no-op is set
             update(repository, pid, fedoraObject.getDc());
             final List<Datastream> datastreams = metsContainer.getDatastreams();
+
+            final XMLInlineDatastream repositorySlubInfo = (XMLInlineDatastream) repository.getDatastream(pid, METSContainer.DS_ID_SLUBINFO);
+            XMLInlineDatastream depositSlubInfo = (XMLInlineDatastream) findDatastream(METSContainer.DS_ID_SLUBINFO, datastreams);
+            if (repositorySlubInfo != null) {
+                if (depositSlubInfo == null) {
+                    depositSlubInfo = repositorySlubInfo;
+                    datastreams.add(repositorySlubInfo);
+                } else {
+                    try {
+                        mergeAttachmentElements(depositSlubInfo, repositorySlubInfo);
+                    } catch (JDOMException e) {
+                        throw new SWORDException("Cannot merge deposit SLUB-INFO with repository SLUB-INFO", e);
+                    }
+                }
+            }
+
             ensureAugmentedSlubInfoDatastream(datastreams);
             removeAugmentationWrapperFrom(datastreams);
 
             final List<Datastream> fileDatastreams = findDatastreams("ATT-", datastreams);
-            final Datastream slubInfoDatastream = findDatastream(METSContainer.DS_ID_SLUBINFO, datastreams);
 
             updateIfPresent(repository, pid, metsContainer.getModsDatastream());
             updateAttachmentDatastreams(repository, pid, fileDatastreams);
-            updateOrAdd(repository, pid, slubInfoDatastream);
+            updateOrAdd(repository, pid, depositSlubInfo);
             updateOrAdd(repository, pid, metsContainer.getQucosaXmlDatastream());
             delete(metsContainer.getTemporayFiles());
         }
 
         return swordEntry;
+    }
+
+    private void mergeAttachmentElements(XMLInlineDatastream into, XMLInlineDatastream from) throws JDOMException {
+        Element intoRights = into.toXML().getRootElement().getChild("rights", Namespaces.SLUB);
+
+        if (intoRights == null) {
+            intoRights = new Element("rights", Namespaces.SLUB);
+            into.toXML().getRootElement().addContent(intoRights);
+        }
+
+        final Element fromRights = from.toXML().getRootElement().getChild("rights", Namespaces.SLUB);
+
+        final Map<String, Element> fromAttachmentElementMap = getAttachmentElementMap(
+                (fromRights == null) ? null : XPATH_ATTACHMENTS.selectNodes(fromRights));
+
+        final Map<String, Element> intoAttachmentElementMap = getAttachmentElementMap(
+                (fromRights == null) ? null : XPATH_ATTACHMENTS.selectNodes(intoRights));
+
+        fromAttachmentElementMap.keySet().removeAll(intoAttachmentElementMap.keySet());
+
+        for (Element element : fromAttachmentElementMap.values()) {
+            intoRights.addContent((Content) element.clone());
+        }
+    }
+
+    private Map<String, Element> getAttachmentElementMap(final List<Element> fromList) {
+        return new HashMap<String, Element>() {{
+            CollectionUtils.forAllDo(
+                    fromList,
+                    new Closure() {
+                        @Override
+                        public void execute(Object input) {
+                            Element item = (Element) input;
+                            put(item.getAttributeValue("ref"), item);
+                        }
+                    });
+        }};
     }
 
     private METSContainer loadAndValidate(DepositCollection deposit) throws SWORDException {
@@ -273,7 +328,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
     private void updateAttachmentDatastreams(FedoraRepository repository, String pid, List<Datastream> datastreams) throws SWORDException {
         for (Datastream attDatastream : datastreams) {
             if (attDatastream instanceof VoidDatastream) {
-                if (repository.hasDatastream(pid, attDatastream.getId())) {
+                if (repository.hasDatastream(pid, attDatastream.getId()) && DELETED.equals(attDatastream.getState())) {
                     repository.setDatastreamState(pid, attDatastream.getId(), DELETED, null);
                 }
             } else {
@@ -298,12 +353,12 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         }
     }
 
-    private void updateOrAdd(FedoraRepository repository, String pid, Datastream datastream) throws SWORDException {
-        if (datastream != null) {
-            if (repository.hasDatastream(pid, datastream.getId())) {
-                repository.modifyDatastream(pid, datastream, null);
+    private void updateOrAdd(FedoraRepository repository, String pid, Datastream inputDatastream) throws SWORDException {
+        if (inputDatastream != null) {
+            if (repository.hasDatastream(pid, inputDatastream.getId())) {
+                repository.modifyDatastream(pid, inputDatastream, null);
             } else {
-                repository.addDatastream(pid, datastream, null);
+                repository.addDatastream(pid, inputDatastream, null);
             }
         }
     }
@@ -314,15 +369,15 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
 
         Document info;
         Datastream slubInfo = findDatastream(METSContainer.DS_ID_SLUBINFO, datastreams);
-        if (slubInfo != null) {
-            info = ((XMLInlineDatastream) slubInfo).toXML();
-        } else {
+        if (slubInfo == null) {
             info = new Document();
             info.addContent(new Element("info", Namespaces.SLUB));
             slubInfo = new XMLInlineDatastream(METSContainer.DS_ID_SLUBINFO, info);
             slubInfo.setLabel(METSContainer.DS_ID_SLUBINFO_LABEL);
             slubInfo.setVersionable(Boolean.parseBoolean(System.getProperty("datastream.versioning", "false")));
             datastreams.add(slubInfo);
+        } else {
+            info = ((XMLInlineDatastream) slubInfo).toXML();
         }
 
         Element rights = info.getRootElement().getChild("rights", Namespaces.SLUB);
@@ -334,17 +389,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         final List<Element> attachmentElements;
         try {
             attachmentElements = XPATH_ATTACHMENTS.selectNodes(rights);
-            Map<String, Element> attachmentElementMap = new HashMap<String, Element>() {{
-                CollectionUtils.forAllDo(
-                        attachmentElements,
-                        new Closure() {
-                            @Override
-                            public void execute(Object input) {
-                                Element item = (Element) input;
-                                put(item.getAttributeValue("ref"), item);
-                            }
-                        });
-            }};
+            Map<String, Element> attachmentElementMap = getAttachmentElementMap(attachmentElements);
             for (Datastream attachmentDatastream : attachmentDatastreams) {
                 if (attachmentDatastream instanceof AugmentedDatastream) {
                     AugmentedDatastream augmentedDatastream = (AugmentedDatastream) attachmentDatastream;
@@ -357,7 +402,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
                     attachment.setAttribute("ref", attachmentDatastreamId);
                     attachment.setAttribute("hasArchivalValue", yesno(augmentedDatastream.isHasArchivalValue()));
                     attachment.setAttribute("isDownloadable", yesno(augmentedDatastream.isDownloadable()));
-                } else if (attachmentDatastream instanceof VoidDatastream) {
+                } else if ((attachmentDatastream instanceof VoidDatastream) && DELETED.equals(attachmentDatastream.getState())) {
                     rights.removeContent(
                             new XPathQuery("slub:attachment[@ref='" + attachmentDatastream.getId() + "']")
                                     .selectNode(rights));

@@ -36,22 +36,21 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.purl.sword.server.fedora.fedoraObjects.State.DELETED;
 import static org.purl.sword.server.fedora.fedoraObjects.State.INACTIVE;
 
 public class METSContainer {
 
     public static final Pattern PATTERN = Pattern.compile("^[a-z][a-z0-9\\+\\.\\-]*\\:.*", Pattern.CASE_INSENSITIVE);
-
     public static final String DS_ID_SLUBINFO = "SLUB-INFO";
     public static final String DS_ID_SLUBINFO_LABEL = "SLUB Administrative Metadata";
+    private static final String DS_ID_MODS = "MODS";
+    private static final String DS_ID_MODS_LABEL = "Object Bibliographic Metadata";
     private static final String DS_ID_QUCOSAXML = "QUCOSA-XML";
     private static final String DS_ID_QUCOSAXML_LABEL = "Pristine Qucosa XML Metadata";
     private static final String DS_MODS_MIME_TYPE = "application/mods+xml";
-    private static final String DS_ID_MODS = "MODS";
-    private static final String DS_ID_MODS_LABEL = "Object Bibliographic Metadata";
     private static final String METS_DMDSEC_PREFIX = "/mets:mets/mets:dmdSec";
     private static final String MODS_PREFIX = METS_DMDSEC_PREFIX + "/mets:mdWrap[@MDTYPE='MODS']/mets:xmlData/mods:mods";
-
     private final XPathQuery XPATH_FILES = new XPathQuery("/mets:mets/mets:fileSec/mets:fileGrp/mets:file");
     private final XPathQuery XPATH_IDENTIFIERS = new XPathQuery(MODS_PREFIX + "/mods:identifier");
     private final XPathQuery XPATH_MODS = new XPathQuery(MODS_PREFIX);
@@ -59,6 +58,7 @@ public class METSContainer {
     private final XPathQuery XPATH_RELATEDITEMS = new XPathQuery(MODS_PREFIX + "/mods:relatedItem");
     private final XPathQuery XPATH_SLUB = new XPathQuery("/mets:mets/mets:amdSec/mets:techMD" + "/mets:mdWrap[@MDTYPE='OTHER' and @OTHERMDTYPE='SLUBINFO']/mets:xmlData/slub:info");
     private final XPathQuery XPATH_TITLE = new XPathQuery(MODS_PREFIX + "/mods:titleInfo/mods:title[1]");
+
     private final String md5;
     private final Document metsDocument;
 
@@ -125,15 +125,21 @@ public class METSContainer {
                 final String id = validateAndReturn("file ID", fileElement.getAttributeValue("ID"));
 
                 if (isADeleteRequest(fileElement)) {
-                    datastreamList.add(new VoidDatastream(id));
+                    final VoidDatastream voidDatastream = new VoidDatastream(id);
+                    voidDatastream.setState(DELETED);
+                    datastreamList.add(voidDatastream);
                 } else {
-                    final Element fLocat = validateAndReturn("FLocat element", fileElement.getChild("FLocat", Namespaces.METS));
-                    final String href = validateAndReturn("file content URL", fLocat.getAttributeValue("href", Namespaces.XLINK));
-                    final URI uri = new URI(href);
-                    final boolean isFile = uri.getScheme().equals("file");
-                    final String mimetype = validateAndReturn("mime type", fileElement.getAttributeValue("MIMETYPE"));
-
-                    Datastream ds = buildDatastream(id, fileElement, href, mimetype, isFile);
+                    Datastream ds;
+                    if (fileElement.getChild("FLocat", Namespaces.METS) != null) {
+                        final Element fLocat = validateAndReturn("FLocat element", fileElement.getChild("FLocat", Namespaces.METS));
+                        final String href = validateAndReturn("file content URL", fLocat.getAttributeValue("href", Namespaces.XLINK));
+                        final URI uri = new URI(href);
+                        final boolean isFile = uri.getScheme().equals("file");
+                        final String mimetype = validateAndReturn("mime type", fileElement.getAttributeValue("MIMETYPE"));
+                        ds = buildDatastream(id, fileElement, href, mimetype, isFile);
+                    } else {
+                        ds = new VoidDatastream(id);
+                    }
 
                     String digestType = emptyIfNull(fileElement.getAttributeValue("CHECKSUMTYPE"));
                     String digest = emptyIfNull(fileElement.getAttributeValue("CHECKSUM"));
@@ -164,13 +170,15 @@ public class METSContainer {
             fileElements = XPATH_FILES.selectNodes(metsDocument);
             for (Element e : fileElements) {
                 if (!isADeleteRequest(e)) {
-                    final Element fLocat = validateAndReturn("FLocat element", e.getChild("FLocat", Namespaces.METS));
-                    final String href = validateAndReturn("file content URL", fLocat.getAttributeValue("href", Namespaces.XLINK));
-                    final URI uri = new URI(href);
-                    final boolean isFile = uri.getScheme().equals("file");
-                    final boolean isTemporary = emptyIfNull(fLocat.getAttributeValue("USE")).equals("TEMPORARY");
-                    if (isFile && isTemporary) {
-                        filesMarkedForRemoval.add(new File(uri));
+                    if (e.getChild("FLocat", Namespaces.METS) != null) {
+                        final Element fLocat = validateAndReturn("FLocat element", e.getChild("FLocat", Namespaces.METS));
+                        final String href = validateAndReturn("file content URL", fLocat.getAttributeValue("href", Namespaces.XLINK));
+                        final URI uri = new URI(href);
+                        final boolean isFile = uri.getScheme().equals("file");
+                        final boolean isTemporary = emptyIfNull(fLocat.getAttributeValue("USE")).equals("TEMPORARY");
+                        if (isFile && isTemporary) {
+                            filesMarkedForRemoval.add(new File(uri));
+                        }
                     }
                 }
             }

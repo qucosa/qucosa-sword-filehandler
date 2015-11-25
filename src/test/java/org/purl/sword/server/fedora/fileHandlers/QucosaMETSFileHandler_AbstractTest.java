@@ -77,22 +77,25 @@ abstract class QucosaMETSFileHandler_AbstractTest {
         ));
     }
 
-    public static final String MEDIA_TYPE = "application/vnd.qucosa.mets+xml";
     public static final String COLLECTION = "collection:test";
-    public static final String USERNAME = "fedoraAdmin";
-    public static final String SUBMITTER = "qucosa";
-    public static final String METS_FILE_OK = "/mets_ok.xml";
-    public static final String METS_FILE_URL = "/mets_url_file.xml";
-    public static final String METS_FILE_BAD = "/mets_missing_mods.xml";
-    public static final String METS_FILE_BAD2 = "/mets_invalid_file.xml";
+    public static final String CONTENT_MODEL = "info:fedora/qucosa:CModel";
+    public static final String MEDIA_TYPE = "application/vnd.qucosa.mets+xml";
     public static final String METS_FILE_ADD_DS = "/mets_add_ds.xml";
     public static final String METS_FILE_ALLREFS = "/mets_all_references.xml";
+    public static final String METS_FILE_BAD = "/mets_missing_mods.xml";
+    public static final String METS_FILE_BAD2 = "/mets_invalid_file.xml";
+    public static final String METS_FILE_CHECKSUM = "/mets_file_checksum.xml";
     public static final String METS_FILE_DELETE_DS = "/mets_delete_ds.xml";
     public static final String METS_FILE_FILEGROUPS = "/mets_download_filegroup.xml";
+    public static final String METS_FILE_OK = "/mets_ok.xml";
     public static final String METS_FILE_UPDATE = "/mets_update.xml";
-    public static final String METS_FILE_CHECKSUM = "/mets_file_checksum.xml";
     public static final String METS_FILE_UPDATE_MD5 = "9a8d972d972eb799d989d0d2307c9822";
-    public static final String CONTENT_MODEL = "info:fedora/qucosa:CModel";
+    public static final String METS_FILE_URL = "/mets_url_file.xml";
+    public static final String METS_JUST_SLUBINFO = "/mets_just_slubinfo.xml";
+    public static final String METS_JUST_SLUBINFO_WITHOUT_RIGHTS = "/mets_just_slubinfo_without_rights.xml";
+    public static final String METS_NO_FLOCAT = "/mets_no_flocat.xml";
+    public static final String SUBMITTER = "qucosa";
+    public static final String USERNAME = "fedoraAdmin";
 
     protected FedoraRepository mockFedoraRepository;
     protected Appender mockAppender;
