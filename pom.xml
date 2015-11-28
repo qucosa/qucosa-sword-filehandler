@@ -68,7 +68,7 @@
         <dependency>
             <groupId>sword</groupId>
             <artifactId>sword-fedora</artifactId>
-            <version>1.6.0-SNAPSHOT</version>
+            <version>[1.6,)</version>
             <classifier>classes</classifier>
             <scope>provided</scope>
         </dependency>
