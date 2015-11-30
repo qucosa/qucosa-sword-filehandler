@@ -327,11 +327,16 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
 
     private void updateAttachmentDatastreams(FedoraRepository repository, String pid, List<Datastream> datastreams) throws SWORDException {
         for (Datastream attDatastream : datastreams) {
-            if (attDatastream instanceof VoidDatastream) {
-                if (repository.hasDatastream(pid, attDatastream.getId()) && DELETED.equals(attDatastream.getState())) {
+            final boolean isVoidDatastream = attDatastream instanceof VoidDatastream;
+            final boolean toBeDeleted = isVoidDatastream && DELETED.equals(attDatastream.getState());
+
+            if (toBeDeleted) {
+                if (repository.hasDatastream(pid, attDatastream.getId())) {
                     repository.setDatastreamState(pid, attDatastream.getId(), DELETED, null);
+                    return;
                 }
             } else {
+                // assuming content or property modification
                 if (repository.hasDatastream(pid, attDatastream.getId())) {
                     repository.modifyDatastream(pid, attDatastream, null);
                 } else {

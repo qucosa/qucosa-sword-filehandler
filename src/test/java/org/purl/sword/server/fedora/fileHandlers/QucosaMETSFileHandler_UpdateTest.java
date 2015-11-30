@@ -181,6 +181,13 @@ public class QucosaMETSFileHandler_UpdateTest extends QucosaMETSFileHandler_Abst
     }
 
     @Test
+    public void updates_existing_attachment_label() throws Exception {
+        ArgumentCaptor<Datastream> argument = runUpdateDeposit("test:1", "ATT-2", METS_NO_FLOCAT);
+        verify(mockFedoraRepository).modifyDatastream(eq("test:1"), argument.capture(), anyString());
+        assertEquals("Changed Attachment Label", argument.getValue().getLabel());
+    }
+
+    @Test
     public void dont_overwrite_existing_attachment_elements() throws Exception {
         prepareMockWithSlubInfo();
 

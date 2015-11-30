@@ -139,6 +139,7 @@ public class METSContainer {
                         ds = buildDatastream(id, fileElement, href, mimetype, isFile);
                     } else {
                         ds = new VoidDatastream(id);
+                        ds.setLabel(fileElement.getAttributeValue("LABEL", Namespaces.MEXT));
                     }
 
                     String digestType = emptyIfNull(fileElement.getAttributeValue("CHECKSUMTYPE"));
