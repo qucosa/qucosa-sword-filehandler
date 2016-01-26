@@ -16,6 +16,7 @@
 
 package org.purl.sword.server.fedora.fileHandlers;
 
+import org.jdom.Attribute;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
@@ -50,17 +51,19 @@ public class METSContainer {
     private static final String DS_ID_QUCOSAXML_LABEL = "Pristine Qucosa XML Metadata";
     private static final String DS_MODS_MIME_TYPE = "application/mods+xml";
     private static final String METS_DMDSEC_PREFIX = "/mets:mets/mets:dmdSec";
+    private static final String METS_HDR_PREFIX = "/mets:mets/mets:metsHdr";
     private static final String MODS_PREFIX = METS_DMDSEC_PREFIX + "/mets:mdWrap[@MDTYPE='MODS']/mets:xmlData/mods:mods";
     private final XPathQuery XPATH_FILES = new XPathQuery("/mets:mets/mets:fileSec/mets:fileGrp/mets:file");
     private final XPathQuery XPATH_IDENTIFIERS = new XPathQuery(MODS_PREFIX + "/mods:identifier");
     private final XPathQuery XPATH_MODS = new XPathQuery(MODS_PREFIX);
     private final XPathQuery XPATH_QUCOSA = new XPathQuery(METS_DMDSEC_PREFIX + "/mets:mdWrap[@MDTYPE='OTHER' and @OTHERMDTYPE='QUCOSA-XML']/mets:xmlData/Opus");
+    private final XPathQuery XPATH_RECORDSTATUS = new XPathQuery(METS_HDR_PREFIX + "/@RECORDSTATUS");
     private final XPathQuery XPATH_RELATEDITEMS = new XPathQuery(MODS_PREFIX + "/mods:relatedItem");
     private final XPathQuery XPATH_SLUB = new XPathQuery("/mets:mets/mets:amdSec/mets:techMD" + "/mets:mdWrap[@MDTYPE='OTHER' and @OTHERMDTYPE='SLUBINFO']/mets:xmlData/slub:info");
     private final XPathQuery XPATH_TITLE = new XPathQuery(MODS_PREFIX + "/mods:titleInfo/mods:title[1]");
-
     private final String md5;
     private final Document metsDocument;
+    private State recordstatus;
 
     public METSContainer(InputStream in) throws NoSuchAlgorithmException, JDOMException, IOException {
         DigestInputStream din = new DigestInputStream(in, MessageDigest.getInstance("MD5"));
@@ -197,6 +200,26 @@ public class METSContainer {
         } catch (JDOMException e) {
             return null;
         }
+    }
+
+    public State getRecordstatus() throws SWORDException {
+        try {
+            final Attribute attr = XPATH_RECORDSTATUS.selectAttribute(metsDocument);
+            if (attr != null) {
+                final String rs = attr.getValue();
+                if (rs != null) {
+                    try {
+                        return State.valueOf(rs);
+                    } catch (IllegalArgumentException e) {
+                        throw new SWORDException(
+                                String.format("Unknown METS record state: %s (none of `ACTIVE`, `INACTIVE` or `DELETED`) ", rs));
+                    }
+                }
+            }
+        } catch (JDOMException e) {
+            throw new SWORDException("Cannot obtain METS record status", e);
+        }
+        return null;
     }
 
     private String getPrimaryTitle() {

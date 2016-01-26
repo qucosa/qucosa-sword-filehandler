@@ -259,6 +259,13 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
         verifyRelationship(buildDeposit(METS_FILE_ALLREFS), "isDerivationOf", "urn:nbn:de:bsz:14-qucosa-25559");
     }
 
+    @Test
+    public void emits_record_status() throws Exception {
+        ArgumentCaptor<FedoraObject> argument = verifyIngestExecution(buildDeposit(METS_WITH_RECORDSTATE));
+        FedoraObject fedoraObject = argument.getValue();
+        assertEquals("Record state should be `ACTIVE`", State.ACTIVE, fedoraObject.getState());
+    }
+
     private void verifyRelationship(DepositCollection deposit, String relationshipName, String referenceUrn) throws Exception {
         ArgumentCaptor<FedoraObject> argument = verifyIngestExecution(deposit);
         FedoraObject fo = argument.getValue();

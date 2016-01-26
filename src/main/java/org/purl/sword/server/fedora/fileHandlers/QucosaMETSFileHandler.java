@@ -68,6 +68,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         fedoraObject.setRelsext(buildRelationships(deposit, metsContainer));
         fedoraObject.setDatastreams(datastreams);
         fedoraObject.setDc(metsContainer.getDublinCore());
+        fedoraObject.setState(metsContainer.getRecordstatus());
 
         validateObject(fedoraObject);
         final SWORDEntry swordEntry = getSWORDEntry(deposit, serviceDocument, fedoraObject);

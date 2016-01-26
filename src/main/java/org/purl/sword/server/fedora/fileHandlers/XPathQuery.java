@@ -16,6 +16,7 @@
 
 package org.purl.sword.server.fedora.fileHandlers;
 
+import org.jdom.Attribute;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
@@ -33,6 +34,10 @@ public class XPathQuery {
         xpath.addNamespace(Namespaces.MODS);
         xpath.addNamespace(Namespaces.XLINK);
         xpath.addNamespace(Namespaces.SLUB);
+    }
+
+    public Attribute selectAttribute(Document doc) throws JDOMException {
+        return (Attribute) xpath.selectSingleNode(doc);
     }
 
     public String selectValue(Document doc) throws JDOMException {

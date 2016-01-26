@@ -94,6 +94,7 @@ abstract class QucosaMETSFileHandler_AbstractTest {
     public static final String METS_JUST_SLUBINFO = "/mets_just_slubinfo.xml";
     public static final String METS_JUST_SLUBINFO_WITHOUT_RIGHTS = "/mets_just_slubinfo_without_rights.xml";
     public static final String METS_NO_FLOCAT = "/mets_no_flocat.xml";
+    public static final String METS_WITH_RECORDSTATE = "/mets_with_recordstate.xml";
     public static final String SUBMITTER = "qucosa";
     public static final String USERNAME = "fedoraAdmin";
 
