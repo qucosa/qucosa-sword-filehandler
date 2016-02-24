@@ -240,21 +240,27 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         return rels;
     }
 
-    private void addDocumentRelations(METSContainer metsContainer, Relationship rels) {
-        List<Element> relatedItems = metsContainer.getModsRelatedItems();
+    private void addDocumentRelations(METSContainer source, Relationship target) {
+        /*
+            Types otherVersion, otherFormat, isReferencedBy, references cannot be mapped into Fedora RI
+            using info:fedora/fedora-system:def/relations-external
+         */
+        final Map<String, String> typeMap = new HashMap<String, String>() {{
+            put("preceding", "isDerivationOf");
+            put("original", "isDerivationOf");
+            put("succeeding", "hasDerivation");
+            put("host", "isPartOf");
+            put("constituent", "hasConstituent");
+            put("series", "isConstituentOf");
+            put("reviewOf", "isAnnotationOf");
+        }};
+
+        List<Element> relatedItems = source.getModsRelatedItems();
         for (Element ri : relatedItems) {
-            String type = ri.getAttributeValue("type");
-            String value = ri.getChildText("identifier", Namespaces.MODS);
-            switch (type) {
-                case "constituent":
-                case "series":
-                    type = "isConstituentOf";
-                    break;
-                case "preceding":
-                    type = "isDerivationOf";
-                    break;
-            }
-            rels.add(type, value);
+            final String riAttributeValue = ri.getAttributeValue("type");
+            final String relationshipType = (typeMap.containsKey(riAttributeValue)) ? typeMap.get(riAttributeValue) : riAttributeValue;
+            final String targetPid = ri.getChildText("identifier", Namespaces.MODS);
+            target.add(relationshipType, targetPid);
         }
     }
 

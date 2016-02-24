@@ -245,8 +245,8 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
     }
 
     @Test
-    public void emits_IsContituentOf_Relationship_for_constituent_type() throws Exception {
-        verifyRelationship(buildDeposit(METS_FILE_ALLREFS), "isConstituentOf", "urn:nbn:de:bsz:14-qucosa-32825");
+    public void emits_HasContituent_Relationship_for_constituent_type() throws Exception {
+        verifyRelationship(buildDeposit(METS_FILE_ALLREFS), "hasConstituent", "urn:nbn:de:bsz:14-qucosa-32825");
     }
 
     @Test
@@ -272,7 +272,7 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
         RelationshipInspector relationship = new RelationshipInspector(fo.getRelsext());
 
         assertNotNull("Should have defined relationships", relationship);
-        assertRelationship("Should have isDerivation relationship to: " + referenceUrn,
+        assertRelationship("Should have " + relationshipName + " relationship to: " + referenceUrn,
                 relationshipName, "info:fedora/" + referenceUrn,
                 relationship.getElements());
     }
