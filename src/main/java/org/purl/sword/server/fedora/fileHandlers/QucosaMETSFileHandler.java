@@ -259,8 +259,9 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         for (Element ri : relatedItems) {
             final String riAttributeValue = ri.getAttributeValue("type");
             final String relationshipType = (typeMap.containsKey(riAttributeValue)) ? typeMap.get(riAttributeValue) : riAttributeValue;
-            final String targetPid = ri.getChildText("identifier", Namespaces.MODS);
-            target.add(relationshipType, targetPid);
+            for (Object e : ri.getChildren("identifier", Namespaces.MODS)) {
+                target.add(relationshipType, ((Element) e).getTextTrim());
+            }
         }
     }
 
