@@ -63,7 +63,6 @@ public class METSContainer {
     private final XPathQuery XPATH_TITLE = new XPathQuery(MODS_PREFIX + "/mods:titleInfo/mods:title[1]");
     private final String md5;
     private final Document metsDocument;
-    private State recordstatus;
 
     public METSContainer(InputStream in) throws NoSuchAlgorithmException, JDOMException, IOException {
         DigestInputStream din = new DigestInputStream(in, MessageDigest.getInstance("MD5"));
