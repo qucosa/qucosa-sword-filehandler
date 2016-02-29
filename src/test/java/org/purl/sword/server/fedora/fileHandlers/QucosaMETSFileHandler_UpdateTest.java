@@ -29,6 +29,7 @@ import org.purl.sword.base.SWORDException;
 import org.purl.sword.server.fedora.JDomHelper;
 import org.purl.sword.server.fedora.baseExtensions.DepositCollection;
 import org.purl.sword.server.fedora.fedoraObjects.Datastream;
+import org.purl.sword.server.fedora.fedoraObjects.Relationship;
 import org.purl.sword.server.fedora.fedoraObjects.State;
 import org.purl.sword.server.fedora.fedoraObjects.XMLInlineDatastream;
 
@@ -224,7 +225,25 @@ public class QucosaMETSFileHandler_UpdateTest extends QucosaMETSFileHandler_Abst
         final String inXMLString = JDomHelper.makeString(((XMLInlineDatastream) argumentCaptor.getValue()).toXML());
         XMLAssert.assertXpathExists("//slub:rights/slub:attachment[@ref='ATT-0' and @hasArchivalValue='yes']", inXMLString);
         XMLAssert.assertXpathExists("//slub:rights/slub:attachment[@ref='ATT-2' and @hasArchivalValue='no']", inXMLString);
+    }
 
+    @Test
+    public void Adds_RELSEXT_with_relationships() throws Exception {
+        runUpdateDeposit("test:1", METS_RELATIONSHIP_UPDATES);
+
+        final ArgumentCaptor<Datastream> argumentCaptor = ArgumentCaptor.forClass(Datastream.class);
+        verify(mockFedoraRepository).addDatastream(eq("test:1"), argumentCaptor.capture(), anyString());
+
+        assertEquals("RELS-EXT", argumentCaptor.getValue().getId());
+        final String xml = JDomHelper.makeString(((Relationship) argumentCaptor.getValue()).toXML());
+        XMLAssert.assertXpathExists("//rel:isPartOf[@rdf:resource='info:fedora/urn:nbn:de:1234-56']", xml);
+    }
+
+    @Test
+    public void Not_overwriting_existing_RELSEXT_when_no_MODS_is_submitted() throws Exception {
+        runUpdateDeposit("test:1", METS_FILE_ADD_DS);
+        final ArgumentCaptor<Datastream> argumentCaptor = ArgumentCaptor.forClass(Datastream.class);
+        verify(mockFedoraRepository, never()).modifyDatastream(eq("test:1"), argumentCaptor.capture(), anyString());
     }
 
     private Document buildSlubInfoWithAttachments(String... params) {

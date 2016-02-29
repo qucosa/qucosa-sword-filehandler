@@ -61,7 +61,9 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
 
         final List<Datastream> datastreams = metsContainer.getDatastreams();
         ensureValidDSIds(datastreams);
-        ensureAugmentedSlubInfoDatastream(datastreams);
+        augmentedFileAttributesInSlubInfoDatastream(datastreams,
+                (XMLInlineDatastream) findDatastream("SLUB-INFO", datastreams));
+
         removeAugmentationWrapperFrom(datastreams);
 
         fedoraObject.setIdentifiers(getIdentifiers(deposit));
@@ -71,14 +73,13 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         fedoraObject.setState(metsContainer.getRecordstatus());
 
         validateObject(fedoraObject);
-        final SWORDEntry swordEntry = getSWORDEntry(deposit, serviceDocument, fedoraObject);
 
         if (!deposit.isNoOp()) { // Don't ingest if no-op is set
             repository.ingest(fedoraObject);
             delete(metsContainer.getTemporayFiles());
         }
 
-        return swordEntry;
+        return getSWORDEntry(deposit, serviceDocument, fedoraObject);
     }
 
     private void removeAugmentationWrapperFrom(List<Datastream> datastreams) {
@@ -127,43 +128,57 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         METSContainer metsContainer = loadAndValidate(deposit);
         final FedoraRepository repository = connectRepository(deposit);
         final String pid = deposit.getDepositID();
-        final FedoraObject fedoraObject = new FedoraObject(pid);
-
-        fedoraObject.setDc(metsContainer.getDublinCore());
-        final SWORDEntry swordEntry = getSWORDEntry(deposit, serviceDocument, fedoraObject);
+        final DublinCore dcDatastream = metsContainer.getDublinCore();
 
         if (!deposit.isNoOp()) { // Don't ingest if no-op is set
-            update(repository, pid, fedoraObject.getDc());
+            update(repository, pid, dcDatastream);
             final List<Datastream> datastreams = metsContainer.getDatastreams();
+            // ... returns augmented file datastreams to access internal properties without
+            // changing the original Fedora Client API
 
-            final XMLInlineDatastream repositorySlubInfo = (XMLInlineDatastream) repository.getDatastream(pid, METSContainer.DS_ID_SLUBINFO);
-            XMLInlineDatastream depositSlubInfo = (XMLInlineDatastream) findDatastream(METSContainer.DS_ID_SLUBINFO, datastreams);
-            if (repositorySlubInfo != null) {
-                if (depositSlubInfo == null) {
-                    depositSlubInfo = repositorySlubInfo;
-                    datastreams.add(repositorySlubInfo);
-                } else {
-                    try {
-                        mergeAttachmentElements(depositSlubInfo, repositorySlubInfo);
-                    } catch (JDOMException e) {
-                        throw new SWORDException("Cannot merge deposit SLUB-INFO with repository SLUB-INFO", e);
-                    }
-                }
+            Relationship rels;
+            // Only build relationships when MODS is part of the deposit
+            if (findDatastream("MODS", datastreams) != null) {
+                rels = buildRelationships(deposit, metsContainer);
+            } else {
+                rels = null;
             }
 
-            ensureAugmentedSlubInfoDatastream(datastreams);
+            Datastream depositSlubInfo = prepareSlubInfoUpdateDatastream(repository, pid, datastreams);
+
+            // Remove augmentation from file datastreams so library code can handle them (instanceOf issues)
             removeAugmentationWrapperFrom(datastreams);
 
-            final List<Datastream> fileDatastreams = findDatastreams("ATT-", datastreams);
-
             updateIfPresent(repository, pid, metsContainer.getModsDatastream());
-            updateAttachmentDatastreams(repository, pid, fileDatastreams);
+            updateAttachmentDatastreams(repository, pid, datastreams);
+            updateOrAdd(repository, pid, rels);
             updateOrAdd(repository, pid, depositSlubInfo);
             updateOrAdd(repository, pid, metsContainer.getQucosaXmlDatastream());
+
             delete(metsContainer.getTemporayFiles());
         }
 
-        return swordEntry;
+        final FedoraObject fedoraObject = new FedoraObject(pid);
+        fedoraObject.setDc(dcDatastream);
+        return getSWORDEntry(deposit, serviceDocument, fedoraObject);
+    }
+
+    private XMLInlineDatastream prepareSlubInfoUpdateDatastream(FedoraRepository repository, String pid, List<Datastream> datastreams) throws SWORDException {
+        final XMLInlineDatastream repositorySlubInfo = (XMLInlineDatastream) repository.getDatastream(pid, METSContainer.DS_ID_SLUBINFO);
+        XMLInlineDatastream depositSlubInfo = (XMLInlineDatastream) findDatastream(METSContainer.DS_ID_SLUBINFO, datastreams);
+        if (repositorySlubInfo != null) {
+            if (depositSlubInfo == null) {
+                depositSlubInfo = repositorySlubInfo;
+            } else {
+                try {
+                    mergeAttachmentElements(depositSlubInfo, repositorySlubInfo);
+                } catch (JDOMException e) {
+                    throw new SWORDException("Cannot merge deposit SLUB-INFO with repository SLUB-INFO", e);
+                }
+            }
+        }
+        augmentedFileAttributesInSlubInfoDatastream(datastreams, depositSlubInfo);
+        return depositSlubInfo;
     }
 
     private void mergeAttachmentElements(XMLInlineDatastream into, XMLInlineDatastream from) throws JDOMException {
@@ -334,7 +349,8 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
     }
 
     private void updateAttachmentDatastreams(FedoraRepository repository, String pid, List<Datastream> datastreams) throws SWORDException {
-        for (Datastream attDatastream : datastreams) {
+        final List<Datastream> fileDatastreams = findDatastreams("ATT-", datastreams);
+        for (Datastream attDatastream : fileDatastreams) {
             final boolean isVoidDatastream = attDatastream instanceof VoidDatastream;
             final boolean toBeDeleted = isVoidDatastream && DELETED.equals(attDatastream.getState());
 
@@ -366,31 +382,29 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         }
     }
 
-    private void updateOrAdd(FedoraRepository repository, String pid, Datastream inputDatastream) throws SWORDException {
-        if (inputDatastream != null) {
-            if (repository.hasDatastream(pid, inputDatastream.getId())) {
-                repository.modifyDatastream(pid, inputDatastream, null);
+    private void updateOrAdd(FedoraRepository repository, String pid, Datastream datastream) throws SWORDException {
+        if (datastream != null) {
+            if (repository.hasDatastream(pid, datastream.getId())) {
+                repository.modifyDatastream(pid, datastream, null);
             } else {
-                repository.addDatastream(pid, inputDatastream, null);
+                repository.addDatastream(pid, datastream, null);
             }
         }
     }
 
-    private void ensureAugmentedSlubInfoDatastream(List<Datastream> datastreams) throws SWORDException {
+    private void augmentedFileAttributesInSlubInfoDatastream(List<Datastream> datastreams, XMLInlineDatastream slubInfo) throws SWORDException {
         final List<Datastream> attachmentDatastreams = findDatastreams("ATT-", datastreams);
         if (attachmentDatastreams.isEmpty()) return;
 
         Document info;
-        Datastream slubInfo = findDatastream(METSContainer.DS_ID_SLUBINFO, datastreams);
         if (slubInfo == null) {
             info = new Document();
             info.addContent(new Element("info", Namespaces.SLUB));
             slubInfo = new XMLInlineDatastream(METSContainer.DS_ID_SLUBINFO, info);
             slubInfo.setLabel(METSContainer.DS_ID_SLUBINFO_LABEL);
             slubInfo.setVersionable(Boolean.parseBoolean(System.getProperty("datastream.versioning", "false")));
-            datastreams.add(slubInfo);
         } else {
-            info = ((XMLInlineDatastream) slubInfo).toXML();
+            info = slubInfo.toXML();
         }
 
         Element rights = info.getRootElement().getChild("rights", Namespaces.SLUB);

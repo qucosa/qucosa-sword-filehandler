@@ -59,24 +59,6 @@ import static org.powermock.api.support.membermodification.MemberMatcher.method;
         QucosaMETSFileHandler.class})
 abstract class QucosaMETSFileHandler_AbstractTest {
 
-    public static final String NS_MODS_V3 = "http://www.loc.gov/mods/v3";
-    public static final String NS_SLUB = "http://slub-dresden.de/";
-    public static final String NS_FOAF = "http://xmlns.com/foaf/0.1/";
-    public static final String NS_RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
-    public static final String NS_XLINK = "http://www.w3.org/1999/xlink";
-
-    static {
-        XMLUnit.setXpathNamespaceContext(new SimpleNamespaceContext(
-                new HashMap() {{
-                    put("mods", NS_MODS_V3);
-                    put("slub", NS_SLUB);
-                    put("foaf", NS_FOAF);
-                    put("rdf", NS_RDF);
-                    put("xlink", NS_XLINK);
-                }}
-        ));
-    }
-
     public static final String COLLECTION = "collection:test";
     public static final String CONTENT_MODEL = "info:fedora/qucosa:CModel";
     public static final String MEDIA_TYPE = "application/vnd.qucosa.mets+xml";
@@ -94,12 +76,32 @@ abstract class QucosaMETSFileHandler_AbstractTest {
     public static final String METS_JUST_SLUBINFO = "/mets_just_slubinfo.xml";
     public static final String METS_JUST_SLUBINFO_WITHOUT_RIGHTS = "/mets_just_slubinfo_without_rights.xml";
     public static final String METS_NO_FLOCAT = "/mets_no_flocat.xml";
+    public static final String METS_RELATIONSHIP_UPDATES = "/mets_relationship_update.xml";
     public static final String METS_WITH_RECORDSTATE = "/mets_with_recordstate.xml";
+    public static final String NS_FEDORA_RELSEXT = "info:fedora/fedora-system:def/relations-external#";
+    public static final String NS_FOAF = "http://xmlns.com/foaf/0.1/";
+    public static final String NS_MODS_V3 = "http://www.loc.gov/mods/v3";
+    public static final String NS_RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+    public static final String NS_SLUB = "http://slub-dresden.de/";
+    public static final String NS_XLINK = "http://www.w3.org/1999/xlink";
     public static final String SUBMITTER = "qucosa";
     public static final String USERNAME = "fedoraAdmin";
 
-    protected FedoraRepository mockFedoraRepository;
+    static {
+        XMLUnit.setXpathNamespaceContext(new SimpleNamespaceContext(
+                new HashMap() {{
+                    put("foaf", NS_FOAF);
+                    put("mods", NS_MODS_V3);
+                    put("rdf", NS_RDF);
+                    put("rel", NS_FEDORA_RELSEXT);
+                    put("slub", NS_SLUB);
+                    put("xlink", NS_XLINK);
+                }}
+        ));
+    }
+
     protected Appender mockAppender;
+    protected FedoraRepository mockFedoraRepository;
 
     @Before
     public void setupLogging() {

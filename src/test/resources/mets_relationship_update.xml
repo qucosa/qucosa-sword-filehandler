@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2016 Saxon State and University Library Dresden (SLUB)
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<mets:mets xmlns:mets="http://www.loc.gov/METS/"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           OBJID="qucosa:1"
+           xsi:schemaLocation="http://www.loc.gov/METS/ http://www.loc.gov/standards/mets/mets.xsd">
+    <mets:dmdSec ID="DMD_000">
+        <!-- Solely MODS update -->
+        <mets:mdWrap MDTYPE="MODS">
+            <mets:xmlData>
+                <!--
+                  DIFF:     Removed a lot info tags compared to mets_ok.xml
+                  USE CASE: Update if <mets:mdWrap> present
+                -->
+                <mods:mods xmlns:mods="http://www.loc.gov/mods/v3"
+                           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                           version="3.6"
+                           xsi:schemaLocation="http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-6.xsd">
+                    <mods:titleInfo lang="ger" usage="primary">
+                        <mods:title>Qucosa: Quality Content of Saxony</mods:title>
+                        <mods:subTitle>Das EFRE-Projekt Sächsischer Dokumentenserver</mods:subTitle>
+                    </mods:titleInfo>
+                    <mods:abstract lang="ger" type="content">Die sächsischen Hochschulbibliotheken verfügten bisher nur
+                        über eigene, auf die jeweilige Einrichtung beschränkte Hochschulschriftenserver. Qucosa, das der
+                        kostenlosen Publikation und dauerhaften Archivierung von elektronischen Diplomarbeiten,
+                        Dissertationen und anderen Veröffentlichungen dient, eröffnet den sächsischen
+                        Hochschulbibliotheken neue Perspektiven und bildet eines der Elemente einer „Digitalen
+                        Bibliothek“ in Sachsen. Bereits mehrere sächsische Hochschulen und Forschungsinstitute benutzen
+                        Qucosa zur Publizierung der eigenen Forschungsergebnisse. Auch nichtwissenschaftliche,
+                        staatliche Einrichtungen werden zukünftig ihre Schriften auf Qucosa im Volltext anbieten.
+                    </mods:abstract>
+                    <mods:identifier type="urn">urn:nbn:de:bsz:14-qucosa-32992</mods:identifier>
+
+                    <!-- It's about updating this relationship: -->
+                    <mods:relatedItem type="host">
+                        <mods:identifier type="urn">urn:nbn:de:1234-56</mods:identifier>
+                    </mods:relatedItem>
+
+                </mods:mods>
+            </mets:xmlData>
+        </mets:mdWrap>
+    </mets:dmdSec>
+    <!-- Fake structMap element to make it valid METS -->
+    <mets:structMap>
+        <mets:div></mets:div>
+    </mets:structMap>
+</mets:mets>

@@ -18,7 +18,6 @@ package org.purl.sword.server.fedora.fileHandlers;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.spi.LoggingEvent;
-import org.custommonkey.xmlunit.XMLAssert;
 import org.jdom.Attribute;
 import org.jdom.Element;
 import org.jdom.Namespace;
@@ -34,6 +33,7 @@ import java.io.File;
 import java.util.List;
 import java.util.UUID;
 
+import static org.custommonkey.xmlunit.XMLAssert.assertXpathExists;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.verify;
 
@@ -111,7 +111,7 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
         Datastream ds = getDatastream("SLUB-INFO", argument.getValue());
         final String inXMLString = JDomHelper.makeString(((XMLInlineDatastream) ds).toXML());
 
-        XMLAssert.assertXpathExists("//slub:rights", inXMLString);
+        assertXpathExists("//slub:rights", inXMLString);
     }
 
     @Test
@@ -120,11 +120,11 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
         Datastream ds = getDatastream("SLUB-INFO", argument.getValue());
         final String inXMLString = JDomHelper.makeString(((XMLInlineDatastream) ds).toXML());
 
-        XMLAssert.assertXpathExists("//slub:rights/slub:attachment[" +
+        assertXpathExists("//slub:rights/slub:attachment[" +
                 "@ref='ATT-0' and " +
                 "@hasArchivalValue='yes' and " +
                 "@isDownloadable='no']", inXMLString);
-        XMLAssert.assertXpathExists("//slub:rights/slub:attachment[" +
+        assertXpathExists("//slub:rights/slub:attachment[" +
                 "@ref='ATT-1' and " +
                 "@hasArchivalValue='no' and " +
                 "@isDownloadable='yes']", inXMLString);
@@ -274,6 +274,21 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
         ArgumentCaptor<FedoraObject> argument = verifyIngestExecution(buildDeposit(METS_WITH_RECORDSTATE));
         FedoraObject fedoraObject = argument.getValue();
         assertEquals("Record state should be `ACTIVE`", State.ACTIVE, fedoraObject.getState());
+    }
+
+    @Test
+    public void Ingest_puts_relatedItem_in_RELSEXT_datastream() throws Exception {
+        FileHandler fh = new QucosaMETSFileHandler();
+        ArgumentCaptor<FedoraObject> argumentCaptor = ArgumentCaptor.forClass(FedoraObject.class);
+
+        fh.ingestDeposit(buildDeposit(METS_FILE_OK), buildServiceDocument());
+        verify(mockFedoraRepository).ingest(argumentCaptor.capture());
+
+        Relationship rels = argumentCaptor.getValue().getRelsext();
+        assertNotNull(rels);
+
+        final String xml = JDomHelper.makeString(rels.toXML());
+        assertXpathExists("//rel:hasConstituent[@rdf:resource='info:fedora/urn:nbn:de:bsz:14-qucosa-32825']", xml);
     }
 
     private void verifyRelationship(DepositCollection deposit, String relationshipName, String referenceUrn) throws Exception {
