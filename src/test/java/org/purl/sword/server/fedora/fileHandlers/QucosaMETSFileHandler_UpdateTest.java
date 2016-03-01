@@ -228,6 +228,16 @@ public class QucosaMETSFileHandler_UpdateTest extends QucosaMETSFileHandler_Abst
     }
 
     @Test
+    public void Correct_object_PID_is_set_in_RELSEXT_about_element() throws Exception {
+        runUpdateDeposit("test:1", METS_RELATIONSHIP_UPDATES);
+
+        final ArgumentCaptor<Datastream> argumentCaptor = ArgumentCaptor.forClass(Datastream.class);
+        verify(mockFedoraRepository).addDatastream(eq("test:1"), argumentCaptor.capture(), anyString());
+
+        assertEquals("test:1", ((Relationship) argumentCaptor.getValue()).getPid());
+    }
+
+    @Test
     public void Adds_RELSEXT_with_relationships() throws Exception {
         runUpdateDeposit("test:1", METS_RELATIONSHIP_UPDATES);
 

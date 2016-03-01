@@ -243,6 +243,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         Relationship rels = new Relationship();
 
         rels.addModel("info:fedora/" + QUCOSA_CMODEL);
+        rels.setPid(deposit.getDepositID());
 
         String collectionPid = deposit.getCollectionPid();
         if (collectionPid == null || collectionPid.isEmpty()) {
