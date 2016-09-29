@@ -27,14 +27,26 @@ import org.purl.sword.base.SWORDEntry;
 import org.purl.sword.base.SWORDException;
 import org.purl.sword.server.fedora.JDomHelper;
 import org.purl.sword.server.fedora.baseExtensions.DepositCollection;
-import org.purl.sword.server.fedora.fedoraObjects.*;
+import org.purl.sword.server.fedora.fedoraObjects.Datastream;
+import org.purl.sword.server.fedora.fedoraObjects.DublinCore;
+import org.purl.sword.server.fedora.fedoraObjects.FedoraObject;
+import org.purl.sword.server.fedora.fedoraObjects.LocalDatastream;
+import org.purl.sword.server.fedora.fedoraObjects.ManagedDatastream;
+import org.purl.sword.server.fedora.fedoraObjects.Relationship;
+import org.purl.sword.server.fedora.fedoraObjects.RelationshipInspector;
+import org.purl.sword.server.fedora.fedoraObjects.State;
+import org.purl.sword.server.fedora.fedoraObjects.XMLInlineDatastream;
 
 import java.io.File;
 import java.util.List;
 import java.util.UUID;
 
 import static org.custommonkey.xmlunit.XMLAssert.assertXpathExists;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.verify;
 
 public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_AbstractTest {
@@ -233,6 +245,20 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
     }
 
     @Test
+    public void hasOaiItemIdAfterIngest() throws Exception {
+        DepositCollection deposit = buildDeposit(METS_FILE_OK);
+
+        ArgumentCaptor<FedoraObject> argument = verifyIngestExecution(deposit);
+
+        FedoraObject fo = argument.getValue();
+        RelationshipInspector relationship = new RelationshipInspector(fo.getRelsext());
+
+        assertRelsExtElementWithValue(
+                "Should have an 'itemID' relationship", "itemID", "oai:qucosa:de:test:1",
+                relationship.getElements());
+    }
+
+    @Test
     public void hasQucosaContentModel() throws Exception {
         ArgumentCaptor<FedoraObject> argument = verifyIngestExecution(buildDeposit(METS_FILE_ALLREFS));
         FedoraObject fo = argument.getValue();
@@ -308,6 +334,23 @@ public class QucosaMETSFileHandler_IngestTest extends QucosaMETSFileHandler_Abst
         fh.ingestDeposit(deposit, buildServiceDocument());
         verify(mockFedoraRepository).ingest(argument.capture());
         return argument;
+    }
+
+    private void assertRelsExtElementWithValue(String message, String name, String value, List<Element> elements) {
+        boolean found = false;
+        final Namespace ns_rdf = Namespace.getNamespace("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
+        for (Element e : elements) {
+            if (e.getName().equals(name)) {
+                String val = e.getTextTrim();
+                if (val != null && val.equals(value)) {
+                    found = true;
+                    break;
+                }
+            }
+        }
+        if (!found) {
+            fail(message);
+        }
     }
 
     private void assertRelationship(String message, String name, String value, List<Element> elements) {

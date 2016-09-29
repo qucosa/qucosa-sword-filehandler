@@ -23,11 +23,20 @@ import org.jdom.Content;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
+import org.jdom.Namespace;
 import org.purl.sword.base.SWORDEntry;
 import org.purl.sword.base.SWORDException;
 import org.purl.sword.base.ServiceDocument;
 import org.purl.sword.server.fedora.baseExtensions.DepositCollection;
-import org.purl.sword.server.fedora.fedoraObjects.*;
+import org.purl.sword.server.fedora.fedoraObjects.AugmentedDatastream;
+import org.purl.sword.server.fedora.fedoraObjects.Datastream;
+import org.purl.sword.server.fedora.fedoraObjects.DublinCore;
+import org.purl.sword.server.fedora.fedoraObjects.ExtendedRelationship;
+import org.purl.sword.server.fedora.fedoraObjects.FedoraObject;
+import org.purl.sword.server.fedora.fedoraObjects.FedoraRepository;
+import org.purl.sword.server.fedora.fedoraObjects.Relationship;
+import org.purl.sword.server.fedora.fedoraObjects.VoidDatastream;
+import org.purl.sword.server.fedora.fedoraObjects.XMLInlineDatastream;
 
 import java.io.File;
 import java.io.IOException;
@@ -57,6 +66,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         METSContainer metsContainer = loadAndValidate(deposit);
         final FedoraRepository repository = connectRepository(deposit);
         final String pid = obtainPID(deposit, repository);
+        deposit.setDepositID(pid);
         final FedoraObject fedoraObject = new FedoraObject(pid);
 
         final List<Datastream> datastreams = metsContainer.getDatastreams();
@@ -240,7 +250,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
     }
 
     private Relationship buildRelationships(DepositCollection deposit, METSContainer metsContainer) {
-        Relationship rels = new Relationship();
+        ExtendedRelationship rels = new ExtendedRelationship();
 
         rels.addModel("info:fedora/" + QUCOSA_CMODEL);
         rels.setPid(deposit.getDepositID());
@@ -252,8 +262,15 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         rels.add("isMemberOfCollection", collectionPid);
 
         addDocumentRelations(metsContainer, rels);
+        addOaiItemId(deposit.getDepositID(), rels);
 
         return rels;
+    }
+
+    private void addOaiItemId(String depositId, ExtendedRelationship target) {
+        if (depositId == null || depositId.isEmpty()) return;
+        String oaiItemId = String.format("oai:%s:%s", "qucosa:de", depositId);
+        target.addLiteral(Namespace.getNamespace("oai", "http://www.openarchives.org/OAI/2.0"), "itemID", oaiItemId);
     }
 
     private void addDocumentRelations(METSContainer source, Relationship target) {
