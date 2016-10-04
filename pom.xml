@@ -22,7 +22,7 @@
 
     <groupId>de.qucosa</groupId>
     <artifactId>qucosa-sword-filehandler</artifactId>
-    <version>1.4.4</version>
+    <version>1.4.5-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>Qucosa SWORD 1.3 Filehandler</name>
 

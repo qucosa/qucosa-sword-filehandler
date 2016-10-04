@@ -53,6 +53,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
     public static final String QUCOSA_CMODEL = "qucosa:CModel";
     private static final Logger log = Logger.getLogger(QucosaMETSFileHandler.class);
     private static final String DEFAULT_COLLECTION_PID = "qucosa:all";
+    public static final Namespace NS_OAI = Namespace.getNamespace("oai", "http://www.openarchives.org/OAI/2.0/");
 
     private final XPathQuery XPATH_ATTACHMENTS;
 
@@ -270,7 +271,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
     private void addOaiItemId(String depositId, ExtendedRelationship target) {
         if (depositId == null || depositId.isEmpty()) return;
         String oaiItemId = String.format("oai:%s:%s", "qucosa:de", depositId);
-        target.addLiteral(Namespace.getNamespace("oai", "http://www.openarchives.org/OAI/2.0"), "itemID", oaiItemId);
+        target.addLiteral(NS_OAI, "itemID", oaiItemId);
     }
 
     private void addDocumentRelations(METSContainer source, Relationship target) {
