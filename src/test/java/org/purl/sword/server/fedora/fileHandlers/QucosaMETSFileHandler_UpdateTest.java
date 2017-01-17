@@ -132,7 +132,7 @@ public class QucosaMETSFileHandler_UpdateTest extends QucosaMETSFileHandler_Abst
                 CollectionUtils.find(argument.getAllValues(), new Predicate() {
                     @Override
                     public boolean evaluate(Object o) {
-                        return ((Datastream) o).getId().equals("ATT-2");
+                        return "ATT-2".equals(((Datastream) o).getId());
                     }
                 }));
     }

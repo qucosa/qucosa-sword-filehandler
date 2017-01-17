@@ -136,7 +136,7 @@ public class METSContainer {
                         final Element fLocat = validateAndReturn("FLocat element", fileElement.getChild("FLocat", Namespaces.METS));
                         final String href = validateAndReturn("file content URL", fLocat.getAttributeValue("href", Namespaces.XLINK));
                         final URI uri = new URI(href);
-                        final boolean isFile = uri.getScheme().equals("file");
+                        final boolean isFile = "file".equals(uri.getScheme());
                         final String mimetype = validateAndReturn("mime type", fileElement.getAttributeValue("MIMETYPE"));
                         ds = buildDatastream(id, fileElement, href, mimetype, isFile);
                     } else {
@@ -177,8 +177,8 @@ public class METSContainer {
                         final Element fLocat = validateAndReturn("FLocat element", e.getChild("FLocat", Namespaces.METS));
                         final String href = validateAndReturn("file content URL", fLocat.getAttributeValue("href", Namespaces.XLINK));
                         final URI uri = new URI(href);
-                        final boolean isFile = uri.getScheme().equals("file");
-                        final boolean isTemporary = emptyIfNull(fLocat.getAttributeValue("USE")).equals("TEMPORARY");
+                        final boolean isFile = "file".equals(uri.getScheme());
+                        final boolean isTemporary = "TEMPORARY".equals(emptyIfNull(fLocat.getAttributeValue("USE")));
                         if (isFile && isTemporary) {
                             filesMarkedForRemoval.add(new File(uri));
                         }
@@ -293,7 +293,7 @@ public class METSContainer {
     }
 
     private boolean isADeleteRequest(Element e) {
-        return e.getAttributeValue("USE") != null && e.getAttributeValue("USE").equals("DELETE");
+        return e.getAttributeValue("USE") != null && "DELETE".equals(e.getAttributeValue("USE"));
     }
 
     private String emptyIfNull(String s) {

@@ -242,7 +242,7 @@ public class QucosaMETSFileHandler extends DefaultFileHandler {
         // ensure there is a MODS datastream
         boolean modsExists = false;
         for (Datastream ds : fedoraObject.getDatastreams()) {
-            if (ds.getId().equals("MODS")) {
+            if ("MODS".equals(ds.getId())) {
                 modsExists = true;
                 break;
             }
